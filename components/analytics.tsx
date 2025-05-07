@@ -58,19 +58,45 @@ const legendFormatter = (value: string) => {
     : value === "subscriptions" 
     ? "Subscriptions" 
     : value;
-  return <span className="text-xs">{formattedValue}</span>;
+
+  // Apply color based on the value
+  const color = value === "likes" 
+    ? CHART_COLORS.likes 
+    : value === "playlists" 
+    ? CHART_COLORS.playlists 
+    : value === "subscriptions" 
+    ? CHART_COLORS.subscriptions 
+    : "#DFD0B8"; // Default to light beige
+
+  return <span className="text-xs" style={{ color }}>{formattedValue}</span>;
+};
+
+// Define constant colors with our new color scheme
+const CHART_COLORS = {
+  likes: "#FF5252",     // Red for likes
+  playlists: "#4CAF50", // Green for playlists
+  subscriptions: "#2196F3", // Blue for subscriptions
+  total: "#FFFFFF",     // White for total
+  background: "#222831", // Dark background
+  cardBg: "#393E46",    // Dark gray for cards
+  accent: "#948979",    // Taupe accent
+  light: "#FFFFFF",     // White text
+  // Adding indexed properties for array-like access
+  0: "#FF5252",     // Red
+  1: "#4CAF50",     // Green
+  2: "#2196F3",     // Blue
+  3: "#FFFFFF",     // White
+  length: 4         // Length property for array-like behavior
 };
 
 // Define constant styles outside component
 const tooltipContentStyle = {
-  backgroundColor: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
+  backgroundColor: "#393E46", // Dark gray background
+  border: "1px solid #948979", // Taupe border
   borderRadius: "6px",
   fontSize: "12px",
+  color: "#FFFFFF", // White text for tooltips
 };
-
-// Define constant colors
-const PASTEL_COLORS = ["#ffb3ba", "#baffc9", "#ffffba", "#bae1ff", "#e0baff"];
 
 export function Analytics() {
   // React hooks - keep all hook calls at the top level and in a consistent order
@@ -163,17 +189,28 @@ export function Analytics() {
 
   // Memoize chart elements to prevent recreating on each render
   const pieChartCells = useMemo(() => {
-    return activityBreakdownData.map((_, index) => (
-      <Cell key={`cell-${index}`} fill={PASTEL_COLORS[index % PASTEL_COLORS.length]} />
-    ));
+    return activityBreakdownData.map((entry) => {
+      // Determine color based on entry name
+      let fillColor;
+      if (entry.name === "Likes") {
+        fillColor = CHART_COLORS.likes;
+      } else if (entry.name === "Playlists") {
+        fillColor = CHART_COLORS.playlists;
+      } else if (entry.name === "Subscriptions") {
+        fillColor = CHART_COLORS.subscriptions;
+      } else {
+        fillColor = CHART_COLORS.light;
+      }
+      return <Cell key={entry.name} fill={fillColor} />;
+    });
   }, [activityBreakdownData]);
 
   // Memoize the gradient definition for the area chart
   const areaDefs = useMemo(() => (
     <defs>
       <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="5%" stopColor={PASTEL_COLORS[4]} stopOpacity={0.8} />
-        <stop offset="95%" stopColor={PASTEL_COLORS[4]} stopOpacity={0} />
+        <stop offset="5%" stopColor={CHART_COLORS.light} stopOpacity={0.8} />
+        <stop offset="95%" stopColor={CHART_COLORS.light} stopOpacity={0} />
       </linearGradient>
     </defs>
   ), []);
@@ -305,11 +342,11 @@ export function Analytics() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 grid-rows-2 gap-4 h-full">
               <SlideIn from="left" delay={0.3} duration={0.5}>
-                <Card className="overflow-hidden bg-zinc-900/50 border-zinc-800/30 shadow-lg h-full">
+                <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg h-full">
                   <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                    <CardTitle className="text-sm font-medium text-zinc-200">Monthly YouTube Activity</CardTitle>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={refetch}>
-                      <RefreshCw className="h-3.5 w-3.5" />
+                    <CardTitle className="text-sm font-medium text-[#DFD0B8]">Monthly YouTube Activity</CardTitle>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-[#948979]/20" onClick={refetch}>
+                      <RefreshCw className="h-3.5 w-3.5 text-[#DFD0B8]" />
                       <span className="sr-only">Refresh</span>
                     </Button>
                   </CardHeader>
@@ -324,15 +361,15 @@ export function Analytics() {
                         >
                           <XAxis 
                             dataKey="name" 
-                            tick={{ fontSize: 10 }} 
-                            stroke="hsl(var(--muted-foreground))" 
+                            tick={{ fontSize: 10, fill: "#FFFFFF" }} 
+                            stroke="#FFFFFF" 
                             angle={-45}
                             textAnchor="end"
                             height={50}
                           />
                           <YAxis 
-                            tick={{ fontSize: 10 }} 
-                            stroke="hsl(var(--muted-foreground))"
+                            tick={{ fontSize: 10, fill: "#FFFFFF" }} 
+                            stroke="#FFFFFF"
                             tickFormatter={formatNumber} 
                           />
                           <Tooltip
@@ -340,9 +377,9 @@ export function Analytics() {
                             formatter={tooltipFormatter}
                           />
                           <Legend formatter={legendFormatter} />
-                          <Bar dataKey="likes" stackId="a" fill={PASTEL_COLORS[0]} name="likes" radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="playlists" stackId="a" fill={PASTEL_COLORS[1]} name="playlists" radius={[0, 0, 0, 0]} />
-                          <Bar dataKey="subscriptions" stackId="a" fill={PASTEL_COLORS[3]} name="subscriptions" radius={[0, 0, 0, 0]} />
+                          <Bar dataKey="likes" stackId="a" fill={CHART_COLORS.likes} name="likes" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="playlists" stackId="a" fill={CHART_COLORS.playlists} name="playlists" radius={[0, 0, 0, 0]} />
+                          <Bar dataKey="subscriptions" stackId="a" fill={CHART_COLORS.subscriptions} name="subscriptions" radius={[0, 0, 0, 0]} />
                         </BarChart>
                       </ChartContainer>
                     )}
@@ -351,11 +388,11 @@ export function Analytics() {
               </SlideIn>
 
               <SlideIn from="right" delay={0.4} duration={0.5}>
-                <Card className="overflow-hidden bg-zinc-900/50 border-zinc-800/30 shadow-lg h-full">
+                <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg h-full">
                   <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                    <CardTitle className="text-sm font-medium text-zinc-200">Activity Breakdown</CardTitle>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={refetch}>
-                      <RefreshCw className="h-3.5 w-3.5" />
+                    <CardTitle className="text-sm font-medium text-[#DFD0B8]">Activity Breakdown</CardTitle>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-[#948979]/20" onClick={refetch}>
+                      <RefreshCw className="h-3.5 w-3.5 text-[#DFD0B8]" />
                       <span className="sr-only">Refresh</span>
                     </Button>
                   </CardHeader>
@@ -371,15 +408,47 @@ export function Analytics() {
                             outerRadius={80}
                             fill="#8884d8"
                             dataKey="value"
-                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                            label={({ name, percent }) => (
+                              <text x={0} y={0} fill="#DFD0B8" textAnchor="middle" dominantBaseline="central">
+                                {`${(percent * 100).toFixed(0)}%`}
+                              </text>
+                            )}
                           >
-                            {pieChartCells}
+                            {activityBreakdownData.map((entry) => {
+                              // Determine color based on name
+                              let fillColor;
+                              if (entry.name === "Likes") {
+                                fillColor = CHART_COLORS.likes;
+                              } else if (entry.name === "Playlists") {
+                                fillColor = CHART_COLORS.playlists;
+                              } else if (entry.name === "Subscriptions") {
+                                fillColor = CHART_COLORS.subscriptions;
+                              } else {
+                                fillColor = CHART_COLORS.light;
+                              }
+                              return <Cell key={entry.name} fill={fillColor} />;
+                            })}
                           </Pie>
                           <Tooltip
                             contentStyle={tooltipContentStyle}
                             formatter={(value, name) => [value, name]}
                           />
-                          <Legend />
+                          <Legend 
+                            formatter={(value) => {
+                              // Determine text color based on name
+                              let textColor;
+                              if (value === "Likes") {
+                                textColor = CHART_COLORS.likes;
+                              } else if (value === "Playlists") {
+                                textColor = CHART_COLORS.playlists;
+                              } else if (value === "Subscriptions") {
+                                textColor = CHART_COLORS.subscriptions;
+                              } else {
+                                textColor = CHART_COLORS.light;
+                              }
+                              return <span className="text-xs" style={{ color: textColor }}>{value}</span>;
+                            }} 
+                          />
                         </PieChart>
                       </ChartContainer>
                     )}
@@ -388,11 +457,11 @@ export function Analytics() {
               </SlideIn>
 
               <SlideIn from="left" delay={0.5} duration={0.5}>
-                <Card className="overflow-hidden bg-zinc-900/50 border-zinc-800/30 shadow-lg h-full">
+                <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg h-full">
                   <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                    <CardTitle className="text-sm font-medium text-zinc-200">Activity Trends</CardTitle>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={refetch}>
-                      <RefreshCw className="h-3.5 w-3.5" />
+                    <CardTitle className="text-sm font-medium text-[#DFD0B8]">Activity Trends</CardTitle>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-[#948979]/20" onClick={refetch}>
+                      <RefreshCw className="h-3.5 w-3.5 text-[#DFD0B8]" />
                       <span className="sr-only">Refresh</span>
                     </Button>
                   </CardHeader>
@@ -403,18 +472,23 @@ export function Analytics() {
                           data={monthlyActivityData} 
                           margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
                         >
-                          {areaDefs}
+                          <defs>
+                            <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={CHART_COLORS.light} stopOpacity={0.8} />
+                              <stop offset="95%" stopColor={CHART_COLORS.light} stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
                           <XAxis 
                             dataKey="name" 
-                            tick={{ fontSize: 10 }} 
-                            stroke="hsl(var(--muted-foreground))"
+                            tick={{ fontSize: 10, fill: "#DFD0B8" }} 
+                            stroke="#948979"
                             angle={-45}
                             textAnchor="end"
                             height={50} 
                           />
                           <YAxis 
-                            tick={{ fontSize: 10 }} 
-                            stroke="hsl(var(--muted-foreground))"
+                            tick={{ fontSize: 10, fill: "#DFD0B8" }} 
+                            stroke="#948979"
                             tickFormatter={formatNumber} 
                           />
                           <Tooltip
@@ -424,7 +498,7 @@ export function Analytics() {
                           <Area 
                             type="monotone" 
                             dataKey="total" 
-                            stroke={PASTEL_COLORS[4]} 
+                            stroke={CHART_COLORS.light} 
                             fillOpacity={1} 
                             fill="url(#colorTotal)"
                             name="Total Activity" 
@@ -437,27 +511,27 @@ export function Analytics() {
               </SlideIn>
 
               <SlideIn from="right" delay={0.6} duration={0.5}>
-                <Card className="overflow-hidden bg-zinc-900/50 border-zinc-800/30 shadow-lg h-full">
+                <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg h-full">
                   <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                    <CardTitle className="text-sm font-medium text-zinc-200">Quick Stats</CardTitle>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={refetch}>
-                      <RefreshCw className="h-3.5 w-3.5" />
+                    <CardTitle className="text-sm font-medium text-[#DFD0B8]">Quick Stats</CardTitle>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-[#948979]/20" onClick={refetch}>
+                      <RefreshCw className="h-3.5 w-3.5 text-[#DFD0B8]" />
                       <span className="sr-only">Refresh</span>
                     </Button>
                   </CardHeader>
                   <CardContent className="flex items-center justify-center h-[calc(100%-2.75rem)]">
                     <div className="grid grid-cols-3 gap-8 w-full px-4">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-foreground">{formatNumber(totalLikes)}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Liked Videos</p>
+                        <div className="text-2xl font-bold" style={{ color: CHART_COLORS.likes }}>{formatNumber(totalLikes)}</div>
+                        <p className="text-xs text-[#DFD0B8] mt-1">Liked Videos</p>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-foreground">{formatNumber(totalPlaylists)}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Playlists</p>
+                        <div className="text-2xl font-bold" style={{ color: CHART_COLORS.playlists }}>{formatNumber(totalPlaylists)}</div>
+                        <p className="text-xs text-[#DFD0B8] mt-1">Playlists</p>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-foreground">{formatNumber(totalSubscriptions)}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Subscriptions</p>
+                        <div className="text-2xl font-bold" style={{ color: CHART_COLORS.subscriptions }}>{formatNumber(totalSubscriptions)}</div>
+                        <p className="text-xs text-[#DFD0B8] mt-1">Subscriptions</p>
                       </div>
                     </div>
                   </CardContent>
