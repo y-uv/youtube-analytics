@@ -12,7 +12,7 @@ interface ExtendedSession extends Session {
 export async function GET() {
   try {
     // Cast the result to ExtendedSession to access the accessToken
-    const session = await getServerSession(authOptions) as ExtendedSession;
+    const session = await getServerSession(authOptions as any) as ExtendedSession;
   
     if (!session || !session.accessToken) {
       return NextResponse.json(
