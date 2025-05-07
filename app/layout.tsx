@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { ThemeProvider } from "@/components/theme-provider";
-import AuthProvider from "@/components/auth-provider"; // Added AuthProvider import
+import AuthProvider from "@/components/auth-provider";
+import { QueryProvider } from '@/components/query-provider';
 
 export const metadata: Metadata = {
   title: 'v0 App',
@@ -17,16 +18,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body>
-        <AuthProvider> {/* Wrapped with AuthProvider */} 
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem={false}
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
-        </AuthProvider> {/* Wrapped with AuthProvider /> */}
+        <AuthProvider>
+          <QueryProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem={false}
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+          </QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   )

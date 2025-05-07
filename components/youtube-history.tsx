@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
@@ -9,126 +9,10 @@ import { Skeleton } from "./ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { InfoIcon, Clock, ThumbsUp, PlaySquare, User, ListVideo, BarChart2 } from "lucide-react";
+import { InfoIcon, Clock, ThumbsUp, PlaySquare, User, ListVideo, BarChart2, Home, RefreshCw } from "lucide-react";
 
-// Interfaces for different YouTube data types
-interface WatchHistoryItem {
-  id: string;
-  videoId: string;
-  title: string;
-  description: string;
-  thumbnail: string;
-  publishedAt: string;
-  videoOwnerChannelTitle: string;
-  videoOwnerChannelId: string;
-}
-
-interface LikedVideo {
-  id: string;
-  videoId: string;
-  title: string;
-  description: string;
-  thumbnail: string;
-  publishedAt: string;
-  channelId: string;
-  channelTitle: string;
-  duration: string;
-  viewCount: string;
-  likeCount: string;
-  commentCount: string;
-  category: string;
-}
-
-interface Playlist {
-  id: string;
-  title: string;
-  description: string;
-  thumbnail: string;
-  publishedAt: string;
-  itemCount: number;
-  privacy: string;
-  channelId: string;
-  channelTitle: string;
-}
-
-interface ChannelStats {
-  id: string;
-  title: string;
-  description: string;
-  customUrl: string;
-  publishedAt: string;
-  thumbnail: string;
-  viewCount: string;
-  subscriberCount: string;
-  hiddenSubscriberCount: boolean;
-  videoCount: string;
-  country: string;
-  uploadPlaylistId: string;
-  bannerImageUrl: string;
-}
-
-interface Subscription {
-  id: string;
-  channelId: string;
-  title: string;
-  description: string;
-  publishedAt: string;
-  thumbnail: string;
-}
-
-// Response interface types
-interface SubscriptionsResponse {
-  subscriptions: Subscription[];
-  totalResults: number;
-  resultsPerPage: number;
-  nextPageToken?: string;
-  error?: string;
-}
-
-interface LikedVideosResponse {
-  items: LikedVideo[];
-  pageInfo?: {
-    totalResults: number;
-    resultsPerPage: number;
-  };
-  nextPageToken?: string;
-  prevPageToken?: string;
-  error?: string;
-}
-
-interface PlaylistsResponse {
-  items: Playlist[];
-  pageInfo?: {
-    totalResults: number;
-    resultsPerPage: number;
-  };
-  nextPageToken?: string;
-  prevPageToken?: string;
-  error?: string;
-}
-
-// Format duration from ISO 8601
-const formatDuration = (isoDuration: string) => {
-  if (!isoDuration) return "";
-  
-  const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-  if (!match) return isoDuration;
-  
-  const hours = match[1] ? parseInt(match[1]) : 0;
-  const minutes = match[2] ? parseInt(match[2]) : 0;
-  const seconds = match[3] ? parseInt(match[3]) : 0;
-  
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  } else {
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  }
-};
-
-// Format numbers for display
-const formatNumber = (num: string | number) => {
-  return Intl.NumberFormat().format(Number(num));
-};
+import { useAllYouTubeData } from "@/hooks/use-youtube-data";
+import { formatNumber, formatDuration } from "@/lib/utils";
 
 // Debugging component to show session information
 const SessionDebug = ({ session }: { session: any }) => {
@@ -154,186 +38,24 @@ export default function YouTubeHistory() {
   const { data: session, status } = useSession();
   const router = useRouter();
   
-  // State for different data types
-  const [watchHistory, setWatchHistory] = useState<WatchHistoryItem[]>([]);
-  const [channelStats, setChannelStats] = useState<ChannelStats | null>(null);
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [likedVideos, setLikedVideos] = useState<LikedVideo[]>([]);
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  
-  // Loading states
-  const [isLoading, setIsLoading] = useState({
-    history: false,
-    channel: false,
-    subscriptions: false,
-    liked: false,
-    playlists: false
-  });
-  
-  // Error states
-  const [error, setError] = useState<{
-    history: string | null;
-    channel: string | null;
-    subscriptions: string | null;
-    liked: string | null;
-    playlists: string | null;
-  }>({
-    history: null,
-    channel: null,
-    subscriptions: null,
-    liked: null,
-    playlists: null
-  });
-  
   const [showDebug, setShowDebug] = useState(true);
-
-  const fetchWatchHistory = async () => {
-    if (status !== "authenticated") return;
-    
-    setIsLoading(prev => ({ ...prev, history: true }));
-    setError(prev => ({ ...prev, history: null }));
-    
-    try {
-      const res = await fetch('/api/youtube/watch-history');
-      const data = await res.json();
-      
-      // Log to console for debugging
-      console.log('[Watch History API]', data);
-      
-      if (!res.ok) {
-        throw new Error(data.error || `Error: ${res.status}`);
-      }
-      
-      setWatchHistory(data);
-    } catch (err: unknown) {
-      console.error("[Watch History Error]", err);
-      setError(prev => ({ ...prev, history: (err as Error).message || "An unknown error occurred" }));
-    } finally {
-      setIsLoading(prev => ({ ...prev, history: false }));
-    }
-  };
-
-  const fetchChannelStats = async () => {
-    if (status !== "authenticated") return;
-    
-    setIsLoading(prev => ({ ...prev, channel: true }));
-    setError(prev => ({ ...prev, channel: null }));
-    
-    try {
-      const res = await fetch('/api/youtube/channel-stats');
-      const data = await res.json();
-      
-      // Log to console for debugging
-      console.log('[Channel Stats API]', data);
-      
-      if (!res.ok) {
-        throw new Error(data.error || `Error: ${res.status}`);
-      }
-      
-      setChannelStats(data);
-    } catch (err: unknown) {
-      console.error("[Channel Stats Error]", err);
-      setError(prev => ({ ...prev, channel: (err as Error).message || "An unknown error occurred" }));
-    } finally {
-      setIsLoading(prev => ({ ...prev, channel: false }));
-    }
-  };
-
-  const fetchSubscriptions = async () => {
-    if (status !== "authenticated") return;
-    
-    setIsLoading(prev => ({ ...prev, subscriptions: true }));
-    setError(prev => ({ ...prev, subscriptions: null }));
-    
-    try {
-      const res = await fetch('/api/youtube/subscriptions');
-      const data = await res.json();
-      
-      // Log to console for debugging
-      console.log('[Subscriptions API]', data);
-      
-      if (!res.ok) {
-        throw new Error(data.error || `Error: ${res.status}`);
-      }
-      
-      setSubscriptions(data.subscriptions || []);
-    } catch (err: unknown) {
-      console.error("[Subscriptions Error]", err);
-      setError(prev => ({ ...prev, subscriptions: (err as Error).message || "An unknown error occurred" }));
-    } finally {
-      setIsLoading(prev => ({ ...prev, subscriptions: false }));
-    }
-  };
-
-  const fetchLikedVideos = async () => {
-    if (status !== "authenticated") return;
-    
-    setIsLoading(prev => ({ ...prev, liked: true }));
-    setError(prev => ({ ...prev, liked: null }));
-    
-    try {
-      const res = await fetch('/api/youtube/liked-videos');
-      const data: LikedVideosResponse = await res.json();
-      
-      // Log to console for debugging
-      console.log('[Liked Videos API]', data);
-      
-      if (!res.ok) {
-        throw new Error(data.error || `Error: ${res.status}`);
-      }
-      
-      setLikedVideos(data.items || []);
-    } catch (err: unknown) {
-      console.error("[Liked Videos Error]", err);
-      setError(prev => ({ ...prev, liked: (err as Error).message || "An unknown error occurred" }));
-    } finally {
-      setIsLoading(prev => ({ ...prev, liked: false }));
-    }
-  };
-
-  const fetchPlaylists = async () => {
-    if (status !== "authenticated") return;
-    
-    setIsLoading(prev => ({ ...prev, playlists: true }));
-    setError(prev => ({ ...prev, playlists: null }));
-    
-    try {
-      const res = await fetch('/api/youtube/playlists');
-      const data: PlaylistsResponse = await res.json();
-      
-      // Log to console for debugging
-      console.log('[Playlists API]', data);
-      
-      if (!res.ok) {
-        throw new Error(data.error || `Error: ${res.status}`);
-      }
-      
-      setPlaylists(data.items || []);
-    } catch (err: unknown) {
-      console.error("[Playlists Error]", err);
-      setError(prev => ({ ...prev, playlists: (err as Error).message || "An unknown error occurred" }));
-    } finally {
-      setIsLoading(prev => ({ ...prev, playlists: false }));
-    }
-  };
-
-  // Fetch all data when authenticated
-  useEffect(() => {
-    if (status === "authenticated") {
-      console.log("[Auth] Session is authenticated, fetching data...");
-      console.log("[Auth] Session object:", session);
-      
-      fetchWatchHistory();
-      fetchChannelStats();
-      fetchSubscriptions();
-      fetchLikedVideos();
-      fetchPlaylists();
-    }
-  }, [status, session]);
+  
+  // Use our React Query hook to fetch all YouTube data
+  const {
+    likedVideos,
+    playlists,
+    subscriptions,
+    channelStats,
+    watchHistory,
+    isLoading,
+    isError,
+    error,
+    refetch
+  } = useAllYouTubeData();
 
   // Navigate to detailed exploration page
-  const goToExplorationPage = () => {
-    router.push('/youtube-data');
+  const goToHomePage = () => {
+    router.push('/');
   };
 
   if (status === "loading") {
@@ -374,13 +96,22 @@ export default function YouTubeHistory() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <h2 className="text-3xl font-bold">Your YouTube Data</h2>
         <div className="flex mt-2 md:mt-0 space-x-2">
-          <Button 
-            onClick={goToExplorationPage}
-            variant="outline" 
+          <Button
+            onClick={goToHomePage}
+            variant="outline"
             className="flex items-center gap-2"
           >
-            <BarChart2 className="h-4 w-4" />
-            <span>Detailed Exploration</span>
+            <Home className="h-4 w-4" />
+            <span>Back to Dashboard</span>
+          </Button>
+          <Button 
+            onClick={() => refetch()}
+            variant="outline" 
+            className="flex items-center gap-2"
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            <span>{isLoading ? "Loading..." : "Refresh"}</span>
           </Button>
         </div>
       </div>
@@ -433,21 +164,15 @@ export default function YouTubeHistory() {
         <TabsContent value="channel" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold">Channel Statistics</h3>
-            <Button 
-              onClick={fetchChannelStats} 
-              disabled={isLoading.channel}
-            >
-              {isLoading.channel ? "Loading..." : "Refresh"}
-            </Button>
           </div>
           
-          {error.channel && (
+          {isError && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-              <p className="text-red-700">{error.channel}</p>
+              <p className="text-red-700">{error instanceof Error ? error.message : "An error occurred"}</p>
             </div>
           )}
           
-          {isLoading.channel ? (
+          {isLoading ? (
             <div className="space-y-2">
               <Skeleton className="h-24 w-full" />
               <div className="grid grid-cols-2 gap-2">
@@ -487,19 +212,19 @@ export default function YouTubeHistory() {
                     <p className="text-2xl font-bold">
                       {channelStats.hiddenSubscriberCount ? 
                         "Hidden" : 
-                        formatNumber(channelStats.subscriberCount)}
+                        formatNumber(Number(channelStats.subscriberCount))}
                     </p>
                   </div>
                   <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg">
                     <p className="text-sm text-slate-500 dark:text-slate-400">Total Views</p>
                     <p className="text-2xl font-bold">
-                      {formatNumber(channelStats.viewCount)}
+                      {formatNumber(Number(channelStats.viewCount))}
                     </p>
                   </div>
                   <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg">
                     <p className="text-sm text-slate-500 dark:text-slate-400">Videos</p>
                     <p className="text-2xl font-bold">
-                      {formatNumber(channelStats.videoCount)}
+                      {formatNumber(Number(channelStats.videoCount))}
                     </p>
                   </div>
                 </div>
@@ -531,21 +256,15 @@ export default function YouTubeHistory() {
         <TabsContent value="liked" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold">Liked Videos</h3>
-            <Button 
-              onClick={fetchLikedVideos} 
-              disabled={isLoading.liked}
-            >
-              {isLoading.liked ? "Loading..." : "Refresh"}
-            </Button>
           </div>
           
-          {error.liked && (
+          {isError && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-              <p className="text-red-700">{error.liked}</p>
+              <p className="text-red-700">{error instanceof Error ? error.message : "An error occurred"}</p>
             </div>
           )}
           
-          {isLoading.liked ? (
+          {isLoading ? (
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="flex gap-4">
@@ -607,13 +326,13 @@ export default function YouTubeHistory() {
                         </a>
                       </div>
                       <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                        <span>{formatNumber(video.viewCount)} views</span>
+                        <span>{formatNumber(Number(video.viewCount))} views</span>
                         <span>•</span>
-                        <span>{formatNumber(video.likeCount)} likes</span>
+                        <span>{formatNumber(Number(video.likeCount))} likes</span>
                         {video.commentCount && video.commentCount !== "0" && (
                           <>
                             <span>•</span>
-                            <span>{formatNumber(video.commentCount)} comments</span>
+                            <span>{formatNumber(Number(video.commentCount))} comments</span>
                           </>
                         )}
                       </div>
@@ -632,21 +351,15 @@ export default function YouTubeHistory() {
         <TabsContent value="history" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold">Watch History</h3>
-            <Button 
-              onClick={fetchWatchHistory} 
-              disabled={isLoading.history}
-            >
-              {isLoading.history ? "Loading..." : "Refresh"}
-            </Button>
           </div>
           
-          {error.history && (
+          {isError && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-              <p className="text-red-700">{error.history}</p>
+              <p className="text-red-700">{error instanceof Error ? error.message : "An error occurred"}</p>
             </div>
           )}
           
-          {isLoading.history ? (
+          {isLoading ? (
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="flex gap-4">
@@ -710,21 +423,15 @@ export default function YouTubeHistory() {
         <TabsContent value="playlists" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold">Your Playlists</h3>
-            <Button 
-              onClick={fetchPlaylists} 
-              disabled={isLoading.playlists}
-            >
-              {isLoading.playlists ? "Loading..." : "Refresh"}
-            </Button>
           </div>
           
-          {error.playlists && (
+          {isError && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-              <p className="text-red-700">{error.playlists}</p>
+              <p className="text-red-700">{error instanceof Error ? error.message : "An error occurred"}</p>
             </div>
           )}
           
-          {isLoading.playlists ? (
+          {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (
                 <Skeleton key={i} className="h-48 w-full rounded" />
@@ -792,21 +499,15 @@ export default function YouTubeHistory() {
         <TabsContent value="subscriptions" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold">Subscriptions</h3>
-            <Button 
-              onClick={fetchSubscriptions} 
-              disabled={isLoading.subscriptions}
-            >
-              {isLoading.subscriptions ? "Loading..." : "Refresh"}
-            </Button>
           </div>
           
-          {error.subscriptions && (
+          {isError && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-              <p className="text-red-700">{error.subscriptions}</p>
+              <p className="text-red-700">{error instanceof Error ? error.message : "An error occurred"}</p>
             </div>
           )}
           
-          {isLoading.subscriptions ? (
+          {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="flex gap-3">
