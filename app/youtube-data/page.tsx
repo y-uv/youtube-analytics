@@ -3,10 +3,14 @@
 import { useState, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import YouTubeHistory from "@/components/youtube-history";
+import { Button } from "@/components/ui/button";
+import { Home } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function YouTubeDataPage() {
   const { data: session, status } = useSession();
   const [isDebugVisible, setIsDebugVisible] = useState(true);
+  const router = useRouter();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -16,7 +20,17 @@ export default function YouTubeDataPage() {
           <p className="text-gray-500 mt-1">View and analyze your YouTube data</p>
         </div>
 
-        <div className="mt-4 md:mt-0">
+        <div className="mt-4 md:mt-0 flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push('/')}
+            className="flex items-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            <span>Back to Dashboard</span>
+          </Button>
+          
           {status === "loading" && <p>Loading...</p>}
           
           {status === "authenticated" && session?.user && (
