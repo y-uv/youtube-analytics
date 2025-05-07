@@ -1,93 +1,90 @@
-import { LikedVideo, Playlist, Subscription } from "@/types/youtube";
+import type { LikedVideo, Playlist, Subscription } from "@/types/youtube";
 
-// Function to generate monthly activity data based on YouTube activity
+// Define constant colors with our color scheme
+const CHART_COLORS = {
+  likes: "#FF5252",     // Red for likes
+  playlists: "#4CAF50", // Green for playlists
+  subscriptions: "#2196F3", // Blue for subscriptions
+};
+
+/**
+ * Generates monthly activity data for chart visualization
+ */
 export function generateMonthlyActivityData(
-  likedVideos: LikedVideo[] = [],
-  playlists: Playlist[] = [],
-  subscriptions: Subscription[] = []
+  likedVideos: LikedVideo[],
+  playlists: Playlist[],
+  subscriptions: Subscription[]
 ) {
-  // Get current date and go back 12 months
-  const now = new Date();
-  const monthlyData: { name: string; month: number; year: number; likes: number; playlists: number; subscriptions: number; total: number; }[] = [];
+  // Create a map to store monthly data
+  const monthMap = new Map();
   
-  // Create an array of the last 12 months
-  for (let i = 11; i >= 0; i--) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const monthName = date.toLocaleString('default', { month: 'short' });
-    const year = date.getFullYear().toString().substr(2, 2); // Get last 2 digits of year
-    
-    monthlyData.push({
-      name: `${monthName} '${year}`,
-      month: date.getMonth(),
-      year: date.getFullYear(),
-      likes: 0,
-      playlists: 0,
-      subscriptions: 0,
-      total: 0
-    });
-  }
-
-  // Count likes by month
+  // Process liked videos
   likedVideos.forEach(video => {
-    if (!video.publishedAt) return;
-    
     const date = new Date(video.publishedAt);
-    const matchingMonth = monthlyData.find(data => 
-      data.month === date.getMonth() && data.year === date.getFullYear()
-    );
+    const monthYear = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
     
-    if (matchingMonth) {
-      matchingMonth.likes += 1;
-      matchingMonth.total += 1;
+    if (!monthMap.has(monthYear)) {
+      monthMap.set(monthYear, { name: monthYear, likes: 0, playlists: 0, subscriptions: 0, total: 0 });
     }
+    
+    const monthData = monthMap.get(monthYear);
+    monthData.likes += 1;
+    monthData.total += 1;
   });
-
-  // Count playlist creations by month
+  
+  // Process playlists
   playlists.forEach(playlist => {
-    if (!playlist.publishedAt) return;
-    
     const date = new Date(playlist.publishedAt);
-    const matchingMonth = monthlyData.find(data => 
-      data.month === date.getMonth() && data.year === date.getFullYear()
-    );
+    const monthYear = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
     
-    if (matchingMonth) {
-      matchingMonth.playlists += 1;
-      matchingMonth.total += 1;
+    if (!monthMap.has(monthYear)) {
+      monthMap.set(monthYear, { name: monthYear, likes: 0, playlists: 0, subscriptions: 0, total: 0 });
     }
+    
+    const monthData = monthMap.get(monthYear);
+    monthData.playlists += 1;
+    monthData.total += 1;
   });
-
-  // Count subscriptions by month
+  
+  // Process subscriptions
   subscriptions.forEach(subscription => {
-    if (!subscription.publishedAt) return;
-    
     const date = new Date(subscription.publishedAt);
-    const matchingMonth = monthlyData.find(data => 
-      data.month === date.getMonth() && data.year === date.getFullYear()
-    );
+    const monthYear = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
     
-    if (matchingMonth) {
-      matchingMonth.subscriptions += 1;
-      matchingMonth.total += 1;
+    if (!monthMap.has(monthYear)) {
+      monthMap.set(monthYear, { name: monthYear, likes: 0, playlists: 0, subscriptions: 0, total: 0 });
     }
+    
+    const monthData = monthMap.get(monthYear);
+    monthData.subscriptions += 1;
+    monthData.total += 1;
   });
-
-  return monthlyData;
+  
+  // Convert map to array and sort chronologically
+  return Array.from(monthMap.values()).sort((a, b) => {
+    const [monthA, yearA] = a.name.split(' ');
+    const [monthB, yearB] = b.name.split(' ');
+    
+    const yearDiff = parseInt(yearA) - parseInt(yearB);
+    if (yearDiff !== 0) return yearDiff;
+    
+    // Month sorting
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months.indexOf(monthA) - months.indexOf(monthB);
+  });
 }
 
-// Function to generate category breakdown data for pie chart
+/**
+ * Generates activity breakdown data for pie chart visualization
+ */
 export function generateActivityBreakdownData(
-  likedVideos: LikedVideo[] = [],
-  playlists: Playlist[] = [],
-  subscriptions: Subscription[] = []
+  likedVideos: LikedVideo[],
+  playlists: Playlist[],
+  subscriptions: Subscription[]
 ) {
-  const likesCount = likedVideos.length;
-  const playlistsCount = playlists.length;
-  const subscriptionsCount = subscriptions.length;
-  
   return [
-    { name: "Liked Videos", value: likesCount },
-    { name: "Playlists", value: playlistsCount },
-    { name: "Subscriptions", value: subscriptionsCount },
-  ].filter(item => item.value > 0); // Only include non-zero values
+    { name: "Likes", value: likedVideos.length, color: CHART_COLORS.likes },
+    { name: "Playlists", value: playlists.length, color: CHART_COLORS.playlists },
+    { name: "Subscriptions", value: subscriptions.length, color: CHART_COLORS.subscriptions }
+  ];
 }

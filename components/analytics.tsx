@@ -190,18 +190,8 @@ export function Analytics() {
   // Memoize chart elements to prevent recreating on each render
   const pieChartCells = useMemo(() => {
     return activityBreakdownData.map((entry) => {
-      // Determine color based on entry name
-      let fillColor;
-      if (entry.name === "Likes") {
-        fillColor = CHART_COLORS.likes;
-      } else if (entry.name === "Playlists") {
-        fillColor = CHART_COLORS.playlists;
-      } else if (entry.name === "Subscriptions") {
-        fillColor = CHART_COLORS.subscriptions;
-      } else {
-        fillColor = CHART_COLORS.light;
-      }
-      return <Cell key={entry.name} fill={fillColor} />;
+      // Use the color property directly from the data
+      return <Cell key={entry.name} fill={entry.color || CHART_COLORS.light} />;
     });
   }, [activityBreakdownData]);
 
@@ -414,20 +404,7 @@ export function Analytics() {
                               </text>
                             )}
                           >
-                            {activityBreakdownData.map((entry) => {
-                              // Determine color based on name
-                              let fillColor;
-                              if (entry.name === "Likes") {
-                                fillColor = CHART_COLORS.likes;
-                              } else if (entry.name === "Playlists") {
-                                fillColor = CHART_COLORS.playlists;
-                              } else if (entry.name === "Subscriptions") {
-                                fillColor = CHART_COLORS.subscriptions;
-                              } else {
-                                fillColor = CHART_COLORS.light;
-                              }
-                              return <Cell key={entry.name} fill={fillColor} />;
-                            })}
+                            {pieChartCells}
                           </Pie>
                           <Tooltip
                             contentStyle={tooltipContentStyle}
@@ -523,7 +500,7 @@ export function Analytics() {
                     <div className="grid grid-cols-3 gap-8 w-full px-4">
                       <div className="text-center">
                         <div className="text-2xl font-bold" style={{ color: CHART_COLORS.likes }}>{formatNumber(totalLikes)}</div>
-                        <p className="text-xs text-[#DFD0B8] mt-1">Liked Videos</p>
+                        <p className="text-xs text-[#DFD0B8] mt-1" style={{ color: CHART_COLORS.likes }}>Liked Videos</p>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold" style={{ color: CHART_COLORS.playlists }}>{formatNumber(totalPlaylists)}</div>
