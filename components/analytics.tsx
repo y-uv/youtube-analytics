@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signIn, signOut, useSession } from "next-auth/react"
 import {
   Area,
@@ -9,6 +9,7 @@ import {
   Bar,
   BarChart,
   Cell,
+  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -23,6 +24,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FadeIn, SlideIn } from "@/components/motion-wrapper";
+import { generateActivityBreakdownData, generateMonthlyActivityData } from "@/lib/analytics-utils"
+import { LikedVideo, Playlist, Subscription, LikedVideosResponse, PlaylistsResponse, SubscriptionsResponse } from "@/types/youtube"
 
 export function Analytics() {
   const { data: session, status } = useSession()
@@ -30,39 +33,78 @@ export function Analytics() {
   const [activePage, setActivePage] = useState("dashboard")
   const [fileUploaded, setFileUploaded] = useState(false)
   const [dragActive, setDragActive] = useState(false)
+  
+  // YouTube data states
+  const [likedVideos, setLikedVideos] = useState<LikedVideo[]>([])
+  const [playlists, setPlaylists] = useState<Playlist[]>([])
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Sample data for charts
-  const likedVideosData = [
-    { name: "Jan", count: 12 },
-    { name: "Feb", count: 19 },
-    { name: "Mar", count: 14 },
-    { name: "Apr", count: 21 },
-    { name: "May", count: 25 },
-    { name: "Jun", count: 18 },
-    { name: "Jul", count: 27 },
-    { name: "Aug", count: 32 },
-    { name: "Sep", count: 29 },
-    { name: "Oct", count: 35 },
-    { name: "Nov", count: 42 },
-    { name: "Dec", count: 38 },
-  ]
+  // Activity statistics states
+  const [monthlyActivityData, setMonthlyActivityData] = useState<any[]>([])
+  const [activityBreakdownData, setActivityBreakdownData] = useState<any[]>([])
 
-  const topChannelsData = [
-    { name: "Channel A", value: 35 },
-    { name: "Channel B", value: 25 },
-    { name: "Channel C", value: 20 },
-    { name: "Channel D", value: 15 },
-    { name: "Channel E", value: 5 },
-  ]
+  // Fetch YouTube data when authenticated
+  useEffect(() => {
+    if (status === "authenticated" && session) {
+      fetchYouTubeData();
+    }
+  }, [status, session]);
 
-  const timeOfDayData = [
-    { hour: "00:00", views: 12 },
-    { hour: "04:00", views: 5 },
-    { hour: "08:00", views: 15 },
-    { hour: "12:00", views: 32 },
-    { hour: "16:00", views: 42 },
-    { hour: "20:00", views: 35 },
-  ]
+  // Process data whenever the source data changes
+  useEffect(() => {
+    // Generate monthly activity data
+    const monthlyData = generateMonthlyActivityData(likedVideos, playlists, subscriptions);
+    setMonthlyActivityData(monthlyData);
+
+    // Generate activity breakdown data for pie chart
+    const breakdownData = generateActivityBreakdownData(likedVideos, playlists, subscriptions);
+    setActivityBreakdownData(breakdownData);
+  }, [likedVideos, playlists, subscriptions]);
+
+  const fetchYouTubeData = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Fetch liked videos
+      const likedRes = await fetch('/api/youtube/liked-videos');
+      const likedData: LikedVideosResponse = await likedRes.json();
+      
+      if (!likedRes.ok && likedData.error) {
+        console.error("Error fetching liked videos:", likedData.error);
+      } else {
+        setLikedVideos(likedData.items || []);
+      }
+      
+      // Fetch playlists
+      const playlistsRes = await fetch('/api/youtube/playlists');
+      const playlistsData: PlaylistsResponse = await playlistsRes.json();
+      
+      if (!playlistsRes.ok && playlistsData.error) {
+        console.error("Error fetching playlists:", playlistsData.error);
+      } else {
+        setPlaylists(playlistsData.items || []);
+      }
+      
+      // Fetch subscriptions
+      const subsRes = await fetch('/api/youtube/subscriptions');
+      const subsData: SubscriptionsResponse = await subsRes.json();
+      
+      if (!subsRes.ok && subsData.error) {
+        console.error("Error fetching subscriptions:", subsData.error);
+      } else {
+        setSubscriptions(subsData.subscriptions || []);
+      }
+      
+    } catch (err) {
+      console.error("Error fetching YouTube data:", err);
+      setError("Failed to load YouTube data. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Updated pastel color palette
   const PASTEL_COLORS = ["#ffb3ba", "#baffc9", "#ffffba", "#bae1ff", "#e0baff"];
@@ -107,6 +149,22 @@ export function Analytics() {
       </div>
     )
   }
+
+  // Format large numbers
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+  };
+
+  // Calculate total activity numbers
+  const totalLikes = likedVideos.length;
+  const totalPlaylists = playlists.length;
+  const totalSubscriptions = subscriptions.length;
+  const totalActivities = totalLikes + totalPlaylists + totalSubscriptions;
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
@@ -174,7 +232,31 @@ export function Analytics() {
           </FadeIn>
         ) : activePage === "dashboard" ? (
           <div className="h-[calc(100vh-3.5rem-2rem)] grid grid-rows-[auto_1fr] gap-4">
-            {!fileUploaded ? (
+            {isLoading && (
+              <FadeIn delay={0.2} duration={0.5}>
+                <div className="flex justify-center p-2">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-900/30">
+                    <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                    <span className="text-sm">Loading YouTube data...</span>
+                  </div>
+                </div>
+              </FadeIn>
+            )}
+
+            {error && (
+              <FadeIn delay={0.2} duration={0.5}>
+                <div className="flex justify-center">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-500 bg-red-500/10 text-red-500">
+                    <span className="text-sm">{error}</span>
+                    <Button variant="ghost" size="sm" className="h-7" onClick={fetchYouTubeData}>
+                      Retry
+                    </Button>
+                  </div>
+                </div>
+              </FadeIn>
+            )}
+
+            {!fileUploaded && !isLoading && !error && (
               <FadeIn delay={0.2} duration={0.5}>
                 <div className="flex justify-center">
                   <div
@@ -197,25 +279,35 @@ export function Analytics() {
                   </div>
                 </div>
               </FadeIn>
-            ) : null}
+            )}
 
-            <div className="grid grid-cols-2 grid-rows-2 gap-4 h-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 grid-rows-2 gap-4 h-full">
               <SlideIn from="left" delay={0.3} duration={0.5}>
                 <Card className="overflow-hidden bg-zinc-900/50 border-zinc-800/30 shadow-lg h-full">
                   <CardHeader className="py-3 px-4">
-                    <CardTitle className="text-sm font-medium text-zinc-200">Liked Videos Over Time</CardTitle>
+                    <CardTitle className="text-sm font-medium text-zinc-200">Monthly YouTube Activity</CardTitle>
                   </CardHeader>
                   <CardContent className="p-0 h-[calc(100%-2.75rem)]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={likedVideosData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                        <defs>
-                          <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={PASTEL_COLORS[0]} stopOpacity={0.8} />
-                            <stop offset="95%" stopColor={PASTEL_COLORS[0]} stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                        <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                      <BarChart
+                        data={monthlyActivityData}
+                        margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
+                        barSize={20}
+                        barGap={3}
+                      >
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fontSize: 10 }} 
+                          stroke="hsl(var(--muted-foreground))" 
+                          angle={-45}
+                          textAnchor="end"
+                          height={50}
+                        />
+                        <YAxis 
+                          tick={{ fontSize: 10 }} 
+                          stroke="hsl(var(--muted-foreground))"
+                          tickFormatter={formatNumber} 
+                        />
                         <Tooltip
                           contentStyle={{
                             backgroundColor: "hsl(var(--card))",
@@ -223,9 +315,33 @@ export function Analytics() {
                             borderRadius: "6px",
                             fontSize: "12px",
                           }}
+                          formatter={(value, name) => {
+                            const formattedName = name === "likes" 
+                              ? "Likes" 
+                              : name === "playlists" 
+                              ? "Playlists" 
+                              : name === "subscriptions" 
+                              ? "Subscriptions" 
+                              : name;
+                            return [value, formattedName];
+                          }}
                         />
-                        <Area type="monotone" dataKey="count" stroke={PASTEL_COLORS[0]} fillOpacity={1} fill="url(#colorCount)" />
-                      </AreaChart>
+                        <Legend 
+                          formatter={(value) => {
+                            const formattedValue = value === "likes" 
+                              ? "Likes" 
+                              : value === "playlists" 
+                              ? "Playlists" 
+                              : value === "subscriptions" 
+                              ? "Subscriptions" 
+                              : value;
+                            return <span className="text-xs">{formattedValue}</span>;
+                          }}
+                        />
+                        <Bar dataKey="likes" stackId="a" fill={PASTEL_COLORS[0]} name="likes" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="playlists" stackId="a" fill={PASTEL_COLORS[1]} name="playlists" radius={[0, 0, 0, 0]} />
+                        <Bar dataKey="subscriptions" stackId="a" fill={PASTEL_COLORS[3]} name="subscriptions" radius={[0, 0, 0, 0]} />
+                      </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
@@ -234,22 +350,22 @@ export function Analytics() {
               <SlideIn from="right" delay={0.4} duration={0.5}>
                 <Card className="overflow-hidden bg-zinc-900/50 border-zinc-800/30 shadow-lg h-full">
                   <CardHeader className="py-3 px-4">
-                    <CardTitle className="text-sm font-medium text-zinc-200">Top Channels</CardTitle>
+                    <CardTitle className="text-sm font-medium text-zinc-200">Activity Breakdown</CardTitle>
                   </CardHeader>
                   <CardContent className="p-0 h-[calc(100%-2.75rem)]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
-                          data={topChannelsData}
+                          data={activityBreakdownData}
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          outerRadius={70}
+                          outerRadius={80}
                           fill="#8884d8"
                           dataKey="value"
                           label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                         >
-                          {topChannelsData.map((entry, index) => (
+                          {activityBreakdownData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={PASTEL_COLORS[index % PASTEL_COLORS.length]} />
                           ))}
                         </Pie>
@@ -260,7 +376,9 @@ export function Analytics() {
                             borderRadius: "6px",
                             fontSize: "12px",
                           }}
+                          formatter={(value, name) => [value, name]}
                         />
+                        <Legend />
                       </PieChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -270,13 +388,30 @@ export function Analytics() {
               <SlideIn from="left" delay={0.5} duration={0.5}>
                 <Card className="overflow-hidden bg-zinc-900/50 border-zinc-800/30 shadow-lg h-full">
                   <CardHeader className="py-3 px-4">
-                    <CardTitle className="text-sm font-medium text-zinc-200">Time of Day Activity</CardTitle>
+                    <CardTitle className="text-sm font-medium text-zinc-200">Activity Trends</CardTitle>
                   </CardHeader>
                   <CardContent className="p-0 h-[calc(100%-2.75rem)]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={timeOfDayData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                        <XAxis dataKey="hour" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                        <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                      <AreaChart data={monthlyActivityData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                        <defs>
+                          <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={PASTEL_COLORS[4]} stopOpacity={0.8} />
+                            <stop offset="95%" stopColor={PASTEL_COLORS[4]} stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fontSize: 10 }} 
+                          stroke="hsl(var(--muted-foreground))"
+                          angle={-45}
+                          textAnchor="end"
+                          height={50} 
+                        />
+                        <YAxis 
+                          tick={{ fontSize: 10 }} 
+                          stroke="hsl(var(--muted-foreground))"
+                          tickFormatter={formatNumber} 
+                        />
                         <Tooltip
                           contentStyle={{
                             backgroundColor: "hsl(var(--card))",
@@ -284,9 +419,17 @@ export function Analytics() {
                             borderRadius: "6px",
                             fontSize: "12px",
                           }}
+                          formatter={(value) => [value, "Total Activity"]}
                         />
-                        <Bar dataKey="views" fill={PASTEL_COLORS[3]} radius={[4, 4, 0, 0]} />
-                      </BarChart>
+                        <Area 
+                          type="monotone" 
+                          dataKey="total" 
+                          stroke={PASTEL_COLORS[4]} 
+                          fillOpacity={1} 
+                          fill="url(#colorTotal)"
+                          name="Total Activity" 
+                        />
+                      </AreaChart>
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
@@ -300,16 +443,16 @@ export function Analytics() {
                   <CardContent className="flex items-center justify-center h-[calc(100%-2.75rem)]">
                     <div className="grid grid-cols-3 gap-8 w-full px-4">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-foreground">127.5h</div>
-                        <p className="text-xs text-muted-foreground mt-1">Watch Time</p>
+                        <div className="text-2xl font-bold text-foreground">{formatNumber(totalLikes)}</div>
+                        <p className="text-xs text-muted-foreground mt-1">Liked Videos</p>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-foreground">842</div>
-                        <p className="text-xs text-muted-foreground mt-1">Videos</p>
+                        <div className="text-2xl font-bold text-foreground">{formatNumber(totalPlaylists)}</div>
+                        <p className="text-xs text-muted-foreground mt-1">Playlists</p>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-foreground">124</div>
-                        <p className="text-xs text-muted-foreground mt-1">Channels</p>
+                        <div className="text-2xl font-bold text-foreground">{formatNumber(totalSubscriptions)}</div>
+                        <p className="text-xs text-muted-foreground mt-1">Subscriptions</p>
                       </div>
                     </div>
                   </CardContent>
