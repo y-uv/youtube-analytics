@@ -119,19 +119,25 @@ export function Analytics() {
             </div>
             <div className="flex items-center gap-2">
               {session && (
-                <Button variant="ghost" size="sm" onClick={togglePage}>
-                  {activePage === "dashboard" ? (
-                    <>
-                      <Settings className="h-4 w-4 mr-1.5" />
-                      Settings
-                    </>
-                  ) : (
-                    <>
-                      <Youtube className="h-4 w-4 mr-1.5" />
-                      Dashboard
-                    </>
-                  )}
-                </Button>
+                <>
+                  <Button variant="default" size="sm" onClick={() => window.location.href = '/youtube-data'} className="bg-red-600 hover:bg-red-700">
+                    <Youtube className="h-4 w-4 mr-1.5" />
+                    YouTube Data
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={togglePage}>
+                    {activePage === "dashboard" ? (
+                      <>
+                        <Settings className="h-4 w-4 mr-1.5" />
+                        Settings
+                      </>
+                    ) : (
+                      <>
+                        <Youtube className="h-4 w-4 mr-1.5" />
+                        Dashboard
+                      </>
+                    )}
+                  </Button>
+                </>
               )}
               <a href="https://github.com" target="_blank" rel="noopener noreferrer">
                 <Button variant="ghost" size="icon" className="h-8 w-8">

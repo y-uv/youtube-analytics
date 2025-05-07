@@ -1,8 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
-import { google } from "googleapis";
 import { NextResponse } from "next/server";
 import { Session } from "next-auth";
+import { getYouTubeClient, extractYouTubeAPIError } from "@/lib/youtube";
 
 // Define extended session interface that includes accessToken
 interface ExtendedSession extends Session {
@@ -20,12 +20,11 @@ export async function GET() {
     );
   }
 
-  const youtube = google.youtube({
-    version: "v3",
-    auth: session.accessToken,
-  });
+  const youtube = getYouTubeClient(session.accessToken);
 
   try {
+    console.log("Fetching YouTube watch history...");
+    
     const response = await youtube.playlistItems.list({
       part: ["snippet,contentDetails"],
       playlistId: "HL", // 'HL' is the special ID for Watch History
@@ -49,47 +48,30 @@ export async function GET() {
 
     return NextResponse.json(watchHistory);
   } catch (error: unknown) {
-    const errorObj = error as { 
-      response?: { 
-        data?: { 
-          error?: { 
-            message?: string; 
-            errors?: Array<{ reason?: string }>
-          } 
-        } 
-      };
-      message?: string;
-    };
+    const { message, statusCode, details } = extractYouTubeAPIError(error);
+    
+    console.error("Error fetching YouTube watch history:", details || message);
 
-    console.error(
-      "Error fetching YouTube watch history:", 
-      errorObj.response?.data || errorObj.message || "Unknown error"
-    );
+    // Special handling for common watch history issues
+    let errorMessage = message;
+    let finalStatusCode = statusCode;
 
-    let errorMessage = "Failed to fetch YouTube watch history.";
-    let statusCode = 500;
-
-    if (errorObj.response?.data?.error) {
-      const errData = errorObj.response.data.error;
-      errorMessage = errData.message || errorMessage;
-
-      if (errData.errors?.[0]) {
-        const specificError = errData.errors[0];
-        if (specificError.reason === "authError" || 
-            specificError.reason === "forbidden" || 
-            specificError.reason === "insufficientPermissions") {
-          statusCode = 403;
-          errorMessage = `YouTube API Authorization Error: ${errData.message || "Access denied"}. Please ensure permissions are granted or try re-logging.`;
-        } else if (specificError.reason === "playlistNotFound") {
-          statusCode = 404;
-          errorMessage = "Watch history playlist not found.";
-        }
+    if (details?.errors?.[0]) {
+      const specificError = details?.errors[0];
+      if (specificError.reason === "authError" || 
+          specificError.reason === "forbidden" || 
+          specificError.reason === "insufficientPermissions") {
+        finalStatusCode = 403;
+        errorMessage = `YouTube API Authorization Error: ${message || "Access denied"}. Please ensure permissions are granted or try re-logging.`;
+      } else if (specificError.reason === "playlistNotFound") {
+        finalStatusCode = 404;
+        errorMessage = "Watch history playlist not found.";
       }
     }
 
     return NextResponse.json(
-      { error: errorMessage, details: errorObj.message || "No details available" },
-      { status: statusCode }
+      { error: errorMessage, details: details || "No details available" },
+      { status: finalStatusCode }
     );
   }
 }

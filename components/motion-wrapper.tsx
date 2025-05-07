@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, Variant, Variants } from 'framer-motion'
 import React from 'react'
 
 interface MotionWrapperProps {
@@ -28,8 +28,8 @@ export function MotionWrapper({
   delay,
   staggerChildren,
 }: MotionWrapperProps) {
-  const variants = {
-    hidden: initial,
+  const variants: Variants = {
+    hidden: initial as Variant,
     visible: {
       ...animate,
       transition: {
@@ -38,8 +38,8 @@ export function MotionWrapper({
         when: staggerChildren ? "beforeChildren" : undefined,
         staggerChildren: staggerChildren,
       },
-    },
-    exit: exit,
+    } as Variant,
+    exit: exit as Variant,
   }
 
   return (
