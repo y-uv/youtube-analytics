@@ -334,7 +334,7 @@ export function Analytics() {
               <SlideIn from="left" delay={0.3} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg h-full">
                   <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                    <CardTitle className="text-sm font-medium text-[#DFD0B8]">Monthly YouTube Activity</CardTitle>
+                    <CardTitle className="text-sm font-medium text-white">Monthly YouTube Activity</CardTitle>
                     <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-[#948979]/20" onClick={refetch}>
                       <RefreshCw className="h-3.5 w-3.5 text-[#DFD0B8]" />
                       <span className="sr-only">Refresh</span>
@@ -380,7 +380,7 @@ export function Analytics() {
               <SlideIn from="right" delay={0.4} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg h-full">
                   <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                    <CardTitle className="text-sm font-medium text-[#DFD0B8]">Activity Breakdown</CardTitle>
+                    <CardTitle className="text-sm font-medium text-white">Activity Breakdown</CardTitle>
                     <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-[#948979]/20" onClick={refetch}>
                       <RefreshCw className="h-3.5 w-3.5 text-[#DFD0B8]" />
                       <span className="sr-only">Refresh</span>
@@ -398,17 +398,30 @@ export function Analytics() {
                             outerRadius={80}
                             fill="#8884d8"
                             dataKey="value"
-                            label={({ name, percent }) => (
-                              <text x={0} y={0} fill="#DFD0B8" textAnchor="middle" dominantBaseline="central">
-                                {`${(percent * 100).toFixed(0)}%`}
-                              </text>
-                            )}
+                            label={false} // Removing the static percentage labels
                           >
                             {pieChartCells}
                           </Pie>
                           <Tooltip
                             contentStyle={tooltipContentStyle}
-                            formatter={(value, name) => [value, name]}
+                            formatter={(value, name) => {
+                              // Create custom tooltip content with proper colors
+                              let color;
+                              if (name === "Likes") {
+                                color = CHART_COLORS.likes;
+                              } else if (name === "Playlists") {
+                                color = CHART_COLORS.playlists;
+                              } else if (name === "Subscriptions") {
+                                color = CHART_COLORS.subscriptions;
+                              } else {
+                                color = CHART_COLORS.light;
+                              }
+                              
+                              return [
+                                <span style={{ color: "#FFFFFF" }}>{value}</span>, 
+                                <span style={{ color }}>{name}</span>
+                              ];
+                            }}
                           />
                           <Legend 
                             formatter={(value) => {
@@ -436,7 +449,7 @@ export function Analytics() {
               <SlideIn from="left" delay={0.5} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg h-full">
                   <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                    <CardTitle className="text-sm font-medium text-[#DFD0B8]">Activity Trends</CardTitle>
+                    <CardTitle className="text-sm font-medium text-white">Activity Trends</CardTitle>
                     <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-[#948979]/20" onClick={refetch}>
                       <RefreshCw className="h-3.5 w-3.5 text-[#DFD0B8]" />
                       <span className="sr-only">Refresh</span>
@@ -457,15 +470,15 @@ export function Analytics() {
                           </defs>
                           <XAxis 
                             dataKey="name" 
-                            tick={{ fontSize: 10, fill: "#DFD0B8" }} 
-                            stroke="#948979"
+                            tick={{ fontSize: 10, fill: "#FFFFFF" }} 
+                            stroke="#FFFFFF"
                             angle={-45}
                             textAnchor="end"
                             height={50} 
                           />
                           <YAxis 
-                            tick={{ fontSize: 10, fill: "#DFD0B8" }} 
-                            stroke="#948979"
+                            tick={{ fontSize: 10, fill: "#FFFFFF" }} 
+                            stroke="#FFFFFF"
                             tickFormatter={formatNumber} 
                           />
                           <Tooltip
@@ -490,7 +503,7 @@ export function Analytics() {
               <SlideIn from="right" delay={0.6} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg h-full">
                   <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                    <CardTitle className="text-sm font-medium text-[#DFD0B8]">Quick Stats</CardTitle>
+                    <CardTitle className="text-sm font-medium text-white">Quick Stats</CardTitle>
                     <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-[#948979]/20" onClick={refetch}>
                       <RefreshCw className="h-3.5 w-3.5 text-[#DFD0B8]" />
                       <span className="sr-only">Refresh</span>
@@ -500,15 +513,15 @@ export function Analytics() {
                     <div className="grid grid-cols-3 gap-8 w-full px-4">
                       <div className="text-center">
                         <div className="text-2xl font-bold" style={{ color: CHART_COLORS.likes }}>{formatNumber(totalLikes)}</div>
-                        <p className="text-xs text-[#DFD0B8] mt-1" style={{ color: CHART_COLORS.likes }}>Liked Videos</p>
+                        <p className="text-xs mt-1" style={{ color: CHART_COLORS.likes }}>Liked Videos</p>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold" style={{ color: CHART_COLORS.playlists }}>{formatNumber(totalPlaylists)}</div>
-                        <p className="text-xs text-[#DFD0B8] mt-1">Playlists</p>
+                        <p className="text-xs mt-1" style={{ color: CHART_COLORS.playlists }}>Playlists</p>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold" style={{ color: CHART_COLORS.subscriptions }}>{formatNumber(totalSubscriptions)}</div>
-                        <p className="text-xs text-[#DFD0B8] mt-1">Subscriptions</p>
+                        <p className="text-xs mt-1" style={{ color: CHART_COLORS.subscriptions }}>Subscriptions</p>
                       </div>
                     </div>
                   </CardContent>
