@@ -151,38 +151,73 @@ export function Analytics() {
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
-      const reader = new FileReader();
       
-      reader.onload = (event) => {
-        try {
-          if (event.target?.result) {
-            const jsonData = JSON.parse(event.target.result as string);
+      // Check if this is likely a watch history file
+      if (file.name.toLowerCase().includes('watch-history') || 
+          file.name.toLowerCase().includes('youtube') || 
+          file.size > 1000000) { // If it's a large JSON file, assume watch history
+        
+        // Store the file in sessionStorage temporarily
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            // Store the file path in sessionStorage for the watch history page to use
+            sessionStorage.setItem('pendingWatchHistoryUpload', 'true');
             
-            if (Array.isArray(jsonData)) {
-              // Filter out entries without titles (they're not useful for analysis)
-              const validEntries = jsonData.filter(entry => entry.title && entry.time);
-              setWatchHistory(validEntries);
-              setTotalWatched(validEntries.length);
-              setFileUploaded(true);
-              
-              // Re-generate analytics with the new watch history data
-              updateAnalyticsWithWatchHistory(validEntries);
-            } else {
-              console.error("Invalid watch history data: not an array");
-            }
+            // Navigate to the watch history page
+            window.location.href = '/watch-history';
+          } catch (error) {
+            console.error("Error preparing watch history redirect:", error);
           }
-        } catch (error) {
-          console.error("Error parsing watch history JSON:", error);
-        }
-      };
-      
-      reader.readAsText(file);
+        };
+        reader.readAsText(file);
+      } else {
+        // Handle as regular file for the main dashboard
+        const reader = new FileReader();
+        
+        reader.onload = (event) => {
+          try {
+            if (event.target?.result) {
+              const jsonData = JSON.parse(event.target.result as string);
+              
+              if (Array.isArray(jsonData)) {
+                // Filter out entries without titles (they're not useful for analysis)
+                const validEntries = jsonData.filter(entry => entry.title && entry.time);
+                setWatchHistory(validEntries);
+                setTotalWatched(validEntries.length);
+                setFileUploaded(true);
+                
+                // Re-generate analytics with the new watch history data
+                updateAnalyticsWithWatchHistory(validEntries);
+              } else {
+                console.error("Invalid watch history data: not an array");
+              }
+            }
+          } catch (error) {
+            console.error("Error parsing watch history JSON:", error);
+          }
+        };
+        
+        reader.readAsText(file);
+      }
     }
   }, []);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      // Check if this is likely a watch history file (large file or specific name)
+      if (file.name.toLowerCase().includes('watch-history') || 
+          file.name.toLowerCase().includes('youtube') || 
+          file.size > 1000000) { // If it's a large JSON file, assume watch history
+        
+        // Navigate to watch history page
+        window.location.href = '/watch-history';
+        return;
+      }
+      
+      // Handle as normal file for the main dashboard
       const reader = new FileReader();
       
       reader.onload = (event) => {
