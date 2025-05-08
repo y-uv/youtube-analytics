@@ -1,10 +1,11 @@
-import type { LikedVideo, Playlist, Subscription } from "@/types/youtube";
+import type { LikedVideo, Playlist, Subscription, WatchHistoryItem } from "@/types/youtube";
 
 // Define constant colors with our color scheme
 const CHART_COLORS = {
   likes: "#FF5252",     // Red for likes
   playlists: "#4CAF50", // Green for playlists
   subscriptions: "#2196F3", // Blue for subscriptions
+  watchHistory: "#FFD700", // Yellow for watch history
 };
 
 /**
@@ -13,7 +14,8 @@ const CHART_COLORS = {
 export function generateMonthlyActivityData(
   likedVideos: LikedVideo[],
   playlists: Playlist[],
-  subscriptions: Subscription[]
+  subscriptions: Subscription[],
+  watchHistory: WatchHistoryItem[] = []
 ) {
   // Create a map to store monthly data
   const monthMap = new Map();
@@ -24,7 +26,7 @@ export function generateMonthlyActivityData(
     const monthYear = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
     
     if (!monthMap.has(monthYear)) {
-      monthMap.set(monthYear, { name: monthYear, likes: 0, playlists: 0, subscriptions: 0, total: 0 });
+      monthMap.set(monthYear, { name: monthYear, likes: 0, playlists: 0, subscriptions: 0, watchHistory: 0, total: 0 });
     }
     
     const monthData = monthMap.get(monthYear);
@@ -38,7 +40,7 @@ export function generateMonthlyActivityData(
     const monthYear = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
     
     if (!monthMap.has(monthYear)) {
-      monthMap.set(monthYear, { name: monthYear, likes: 0, playlists: 0, subscriptions: 0, total: 0 });
+      monthMap.set(monthYear, { name: monthYear, likes: 0, playlists: 0, subscriptions: 0, watchHistory: 0, total: 0 });
     }
     
     const monthData = monthMap.get(monthYear);
@@ -52,12 +54,28 @@ export function generateMonthlyActivityData(
     const monthYear = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
     
     if (!monthMap.has(monthYear)) {
-      monthMap.set(monthYear, { name: monthYear, likes: 0, playlists: 0, subscriptions: 0, total: 0 });
+      monthMap.set(monthYear, { name: monthYear, likes: 0, playlists: 0, subscriptions: 0, watchHistory: 0, total: 0 });
     }
     
     const monthData = monthMap.get(monthYear);
     monthData.subscriptions += 1;
     monthData.total += 1;
+  });
+
+  // Process watch history
+  watchHistory.forEach(item => {
+    if (item.time) {
+      const date = new Date(item.time);
+      const monthYear = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
+      
+      if (!monthMap.has(monthYear)) {
+        monthMap.set(monthYear, { name: monthYear, likes: 0, playlists: 0, subscriptions: 0, watchHistory: 0, total: 0 });
+      }
+      
+      const monthData = monthMap.get(monthYear);
+      monthData.watchHistory += 1;
+      monthData.total += 1;
+    }
   });
   
   // Convert map to array and sort chronologically
@@ -80,11 +98,16 @@ export function generateMonthlyActivityData(
 export function generateActivityBreakdownData(
   likedVideos: LikedVideo[],
   playlists: Playlist[],
-  subscriptions: Subscription[]
+  subscriptions: Subscription[],
+  watchHistory: WatchHistoryItem[] = []
 ) {
+  // Filter watchHistory to only include items with valid titles
+  const validWatchItems = watchHistory.filter(item => item.title);
+  
   return [
     { name: "Likes", value: likedVideos.length, color: CHART_COLORS.likes },
     { name: "Playlists", value: playlists.length, color: CHART_COLORS.playlists },
-    { name: "Subscriptions", value: subscriptions.length, color: CHART_COLORS.subscriptions }
+    { name: "Subscriptions", value: subscriptions.length, color: CHART_COLORS.subscriptions },
+    { name: "Watched Videos", value: validWatchItems.length, color: CHART_COLORS.watchHistory }
   ];
 }

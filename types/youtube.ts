@@ -1,14 +1,22 @@
 // YouTube data interfaces used throughout the app
 
 export interface WatchHistoryItem {
-  id: string;
-  videoId: string;
-  title: string;
-  description: string;
-  thumbnail: string;
-  publishedAt: string;
-  videoOwnerChannelTitle: string;
-  videoOwnerChannelId: string;
+  header?: string;
+  title?: string;
+  titleUrl?: string;
+  subtitles?: {
+    name: string;
+    url: string;
+  }[];
+  time?: string;
+  products?: string[];
+  activityControls?: string[];
+  // Additional fields that may be present in some entries
+  videoId?: string;
+  description?: string;
+  thumbnail?: string;
+  videoOwnerChannelTitle?: string;
+  videoOwnerChannelId?: string;
 }
 
 export interface LikedVideo {
