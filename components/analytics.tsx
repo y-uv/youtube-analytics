@@ -17,7 +17,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import { FileJson, Github, LogIn, Settings, Youtube, RefreshCw } from "lucide-react"
+import { FileJson, Github, LogIn, Settings, Youtube, RefreshCw, BarChart3 } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
@@ -420,36 +420,15 @@ export function Analytics() {
             {!fileUploaded && !isLoading && !isError && (
               <FadeIn delay={0.2} duration={0.5}>
                 <div className="flex justify-center">
-                  <div
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                      dragActive ? "border-primary ring-1 ring-primary" : "border-zinc-800/30"
-                    } bg-zinc-900/30`}
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    className="bg-yellow-600 hover:bg-yellow-700"
+                    onClick={() => window.location.href = '/watch-history'}
                   >
-                    <FileJson className="h-4 w-4 text-violet-400" />
-                    <span className="text-sm">Drop watch-history.json here</span>
-                    <input 
-                      type="file" 
-                      id="file-upload" 
-                      className="hidden" 
-                      accept=".json" 
-                      onChange={handleFileChange} 
-                    />
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-7" 
-                      type="button"
-                      onClick={() => {
-                        document.getElementById('file-upload')?.click();
-                      }}
-                    >
-                      Browse
-                    </Button>
-                  </div>
+                    <BarChart3 className="h-4 w-4 mr-1.5" />
+                    Advanced Analytics
+                  </Button>
                 </div>
               </FadeIn>
             )}
