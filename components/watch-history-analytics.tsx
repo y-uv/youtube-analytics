@@ -16,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import { Cloud, Clock, Calendar, Youtube, ArrowLeft, RefreshCw, FileJson } from "lucide-react"
+import { Cloud, Clock, Calendar, Youtube, ArrowLeft, RefreshCw, FileJson, Sun, Moon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -317,6 +317,50 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
     return (watchData.length / daysDiff).toFixed(1);
   }, [watchData]);
 
+  // Helper function for smooth color transitions between hours
+  const getHourColor = (hour: number) => {
+    // Night to sunrise transition (5AM-7AM)
+    if (hour >= 4 && hour < 7) {
+      const position = (hour - 4) / 3; // 0 to 1 during transition
+      const r = Math.round(33 + position * (255 - 33)); // Blue to Orange
+      const g = Math.round(150 + position * (167 - 150));
+      const b = Math.round(243 - position * (243 - 38));
+      return `rgb(${r}, ${g}, ${b})`;
+    } 
+    // Sunrise to day transition (7AM-9AM)
+    else if (hour >= 7 && hour < 9) {
+      const position = (hour - 7) / 2; // 0 to 1 during transition
+      const r = Math.round(255 - position * (255 - 255));  // Orange to Yellow
+      const g = Math.round(167 + position * (215 - 167));
+      const b = Math.round(38 + position * (0 - 38));
+      return `rgb(${r}, ${g}, ${b})`;
+    } 
+    // Day (9AM-5PM)
+    else if (hour >= 9 && hour < 17) {
+      return "#FFD700"; // Yellow for day
+    } 
+    // Day to sunset transition (5PM-7PM)
+    else if (hour >= 17 && hour < 19) {
+      const position = (hour - 17) / 2; // 0 to 1 during transition
+      const r = Math.round(255 - position * (255 - 255)); // Yellow to Red
+      const g = Math.round(215 - position * (215 - 82));
+      const b = Math.round(0 + position * (82 - 0));
+      return `rgb(${r}, ${g}, ${b})`;
+    } 
+    // Sunset to night transition (7PM-9PM)
+    else if (hour >= 19 && hour < 21) {
+      const position = (hour - 19) / 2; // 0 to 1 during transition
+      const r = Math.round(255 - position * (255 - 33)); // Red to Blue
+      const g = Math.round(82 - position * (82 - 150));
+      const b = Math.round(82 + position * (243 - 82));
+      return `rgb(${r}, ${g}, ${b})`;
+    } 
+    // Night (9PM-4AM)
+    else {
+      return "#2196F3"; // Blue for night
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-background text-foreground">
@@ -327,19 +371,19 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
 
   return (
     <div className="bg-background text-foreground min-h-screen">
-      <div className="container mx-auto py-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="container mx-auto py-3">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Youtube className="h-5 w-5 text-yellow-400" />
-            <h1 className="text-xl font-bold">Watch History Analytics</h1>
+            <Youtube className="h-4 w-4 text-yellow-400" />
+            <h1 className="text-lg font-bold">Watch History Analytics</h1>
           </div>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => router.push('/')}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 h-7 px-2"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-3 w-3" />
             Back to Dashboard
           </Button>
         </div>
@@ -398,18 +442,18 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
         ) : (
           <>
             {/* Analytics Dashboard Section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
               <SlideIn from="left" delay={0.1} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
-                  <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                    <CardTitle className="text-sm font-medium text-white">Total Videos Watched</CardTitle>
+                  <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
+                    <CardTitle className="text-xs font-medium text-white">Total Videos Watched</CardTitle>
                   </CardHeader>
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="p-3 rounded-full bg-yellow-500/20">
-                      <Youtube className="h-6 w-6 text-yellow-500" />
+                  <CardContent className="p-3 flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-yellow-500/20">
+                      <Youtube className="h-5 w-5 text-yellow-500" />
                     </div>
                     <div>
-                      <p className="text-3xl font-bold text-white">{formatNumber(totalVideosWatched)}</p>
+                      <p className="text-2xl font-bold text-white">{formatNumber(totalVideosWatched)}</p>
                       <p className="text-xs text-yellow-300">Videos in your watch history</p>
                     </div>
                   </CardContent>
@@ -418,15 +462,15 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
               
               <SlideIn from="left" delay={0.2} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
-                  <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                    <CardTitle className="text-sm font-medium text-white">Average Daily Watching</CardTitle>
+                  <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
+                    <CardTitle className="text-xs font-medium text-white">Average Daily Watching</CardTitle>
                   </CardHeader>
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="p-3 rounded-full bg-green-500/20">
-                      <Clock className="h-6 w-6 text-green-500" />
+                  <CardContent className="p-3 flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-green-500/20">
+                      <Clock className="h-5 w-5 text-green-500" />
                     </div>
                     <div>
-                      <p className="text-3xl font-bold text-white">{averageVideosPerDay}</p>
+                      <p className="text-2xl font-bold text-white">{averageVideosPerDay}</p>
                       <p className="text-xs text-green-300">Videos watched per day</p>
                     </div>
                   </CardContent>
@@ -435,15 +479,15 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
               
               <SlideIn from="left" delay={0.3} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
-                  <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                    <CardTitle className="text-sm font-medium text-white">Watch History Period</CardTitle>
+                  <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
+                    <CardTitle className="text-xs font-medium text-white">Watch History Period</CardTitle>
                   </CardHeader>
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="p-3 rounded-full bg-blue-500/20">
-                      <Calendar className="h-6 w-6 text-blue-500" />
+                  <CardContent className="p-3 flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-blue-500/20">
+                      <Calendar className="h-5 w-5 text-blue-500" />
                     </div>
                     <div>
-                      <p className="text-xl font-bold text-white">
+                      <p className="text-base font-bold text-white">
                         {monthlyWatchData.length > 0 ? 
                           `${monthlyWatchData[0].name} - ${monthlyWatchData[monthlyWatchData.length - 1].name}` : 
                           "No data"}
@@ -455,26 +499,26 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
               </SlideIn>
             </div>
 
-            <Tabs defaultValue="overview" className="mb-6" onValueChange={setActiveTab}>
-              <TabsList className="w-full max-w-md mx-auto grid grid-cols-4">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="channels">Top Channels</TabsTrigger>
-                <TabsTrigger value="time">Time Analysis</TabsTrigger>
-                <TabsTrigger value="keywords">Keywords</TabsTrigger>
+            <Tabs defaultValue="overview" className="mb-3" onValueChange={setActiveTab}>
+              <TabsList className="w-full max-w-md mx-auto grid grid-cols-4 h-8">
+                <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+                <TabsTrigger value="channels" className="text-xs">Top Channels</TabsTrigger>
+                <TabsTrigger value="time" className="text-xs">Time Analysis</TabsTrigger>
+                <TabsTrigger value="keywords" className="text-xs">Keywords</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   <SlideIn from="left" delay={0.4} duration={0.5}>
                     <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
-                      <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                        <CardTitle className="text-sm font-medium text-white">Monthly Watch Activity</CardTitle>
+                      <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
+                        <CardTitle className="text-xs font-medium text-white">Monthly Watch Activity</CardTitle>
                       </CardHeader>
-                      <CardContent className="p-2 h-[400px]">
-                        <ChartContainer minHeight={350}>
+                      <CardContent className="p-1 h-[320px] flex items-center justify-center">
+                        <ChartContainer minHeight={280}>
                           <AreaChart
                             data={monthlyWatchData}
-                            margin={{ top: 10, right: 30, left: 10, bottom: 30 }}
+                            margin={{ top: 20, right: 30, left: 10, bottom: 30 }}
                           >
                             <defs>
                               <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
@@ -484,20 +528,23 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                             </defs>
                             <XAxis
                               dataKey="name"
-                              tick={{ fontSize: 10, fill: "#FFFFFF" }}
+                              tick={{ fontSize: 9, fill: "#FFFFFF" }}
                               stroke="#FFFFFF"
                               angle={-45}
                               textAnchor="end"
                               height={60}
                             />
                             <YAxis
-                              tick={{ fontSize: 10, fill: "#FFFFFF" }}
+                              tick={{ fontSize: 9, fill: "#FFFFFF" }}
                               stroke="#FFFFFF"
                               tickFormatter={formatNumber}
                             />
                             <Tooltip
                               contentStyle={tooltipContentStyle}
-                              formatter={(value) => [value, "Videos Watched"]}
+                              formatter={(value) => [
+                                <span style={{ color: "#FFFFFF" }}>{value}</span>,
+                                <span style={{ color: "#FFD700" }}>Videos Watched</span>
+                              ]}
                             />
                             <Area
                               type="monotone"
@@ -515,29 +562,32 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
 
                   <SlideIn from="right" delay={0.4} duration={0.5}>
                     <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
-                      <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                        <CardTitle className="text-sm font-medium text-white">Watching Time Distribution</CardTitle>
+                      <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
+                        <CardTitle className="text-xs font-medium text-white">Watching Time Distribution</CardTitle>
                       </CardHeader>
-                      <CardContent className="p-2 h-[400px]">
-                        <ChartContainer minHeight={350}>
+                      <CardContent className="p-1 h-[320px] flex items-center justify-center">
+                        <ChartContainer minHeight={280}>
                           <BarChart
                             data={hourlyWatchData}
-                            margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
-                            barSize={15}
+                            margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
+                            barSize={12}
                           >
                             <XAxis
                               dataKey="name"
-                              tick={{ fontSize: 10, fill: "#FFFFFF" }}
+                              tick={{ fontSize: 9, fill: "#FFFFFF" }}
                               stroke="#FFFFFF"
                             />
                             <YAxis
-                              tick={{ fontSize: 10, fill: "#FFFFFF" }}
+                              tick={{ fontSize: 9, fill: "#FFFFFF" }}
                               stroke="#FFFFFF"
                               tickFormatter={formatNumber}
                             />
                             <Tooltip
                               contentStyle={tooltipContentStyle}
-                              formatter={(value) => [value, "Videos Watched"]}
+                              formatter={(value) => [
+                                <span style={{ color: "#FFFFFF" }}>{value}</span>,
+                                <span style={{ color: "#FF5252" }}>Videos Watched</span>
+                              ]}
                             />
                             <Bar 
                               dataKey="count" 
@@ -556,40 +606,55 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
               <TabsContent value="channels">
                 <SlideIn from="left" delay={0.4} duration={0.5}>
                   <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
-                    <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                      <CardTitle className="text-sm font-medium text-white">Top 15 Channels</CardTitle>
+                    <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
+                      <CardTitle className="text-xs font-medium text-white">Top 15 Channels</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-2 h-[500px]">
-                      <ChartContainer minHeight={450}>
+                    <CardContent className="p-1 h-[380px] flex items-center justify-center">
+                      <ChartContainer minHeight={370}>
                         <BarChart
-                          data={channelData}
-                          margin={{ top: 10, right: 30, left: 150, bottom: 10 }}
+                          data={channelData.slice(0, 15)}
+                          margin={{ top: 5, right: 25, left: 130, bottom: 5 }}
                           layout="vertical"
-                          barSize={20}
+                          barSize={12}
+                          barGap={2}
                         >
                           <XAxis
                             type="number"
-                            tick={{ fontSize: 10, fill: "#FFFFFF" }}
+                            tick={{ fontSize: 9, fill: "#FFFFFF" }}
                             stroke="#FFFFFF"
                             tickFormatter={formatNumber}
                           />
                           <YAxis
                             type="category"
                             dataKey="name"
-                            tick={{ fontSize: 10, fill: "#FFFFFF" }}
+                            tick={{ fontSize: 8, fill: "#FFFFFF" }}
                             stroke="#FFFFFF"
-                            width={140}
+                            width={120}
                           />
                           <Tooltip
                             contentStyle={tooltipContentStyle}
-                            formatter={(value) => [value, "Videos Watched"]}
+                            formatter={(value, name) => {
+                              return [
+                                <span style={{ color: "#FFFFFF" }}>{value}</span>,
+                                <span style={{ color: "#FF5252" }}>Videos Watched</span>
+                              ];
+                            }}
                           />
                           <Bar 
                             dataKey="count" 
-                            fill={CHART_COLORS.tertiary} 
                             name="Videos Watched" 
                             radius={[0, 4, 4, 0]} 
-                          />
+                          >
+                            {channelData.slice(0, 15).map((entry, index) => {
+                              // Create a gradient from red to blue based on rank
+                              const ratio = index / 14; // 0-14 indexes for 15 items
+                              // Interpolate between red and blue
+                              const r = Math.round(255 * (1 - ratio));
+                              const b = Math.round(255 * ratio);
+                              const color = `rgb(${r}, 82, ${b})`;
+                              return <Cell key={`cell-${index}`} fill={color} />;
+                            })}
+                          </Bar>
                         </BarChart>
                       </ChartContainer>
                     </CardContent>
@@ -598,32 +663,40 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
               </TabsContent>
 
               <TabsContent value="time">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   <SlideIn from="left" delay={0.4} duration={0.5}>
                     <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
-                      <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                        <CardTitle className="text-sm font-medium text-white">Hourly Watching Patterns</CardTitle>
+                      <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
+                        <CardTitle className="text-xs font-medium text-white">Hourly Watching Patterns</CardTitle>
                       </CardHeader>
-                      <CardContent className="p-2 h-[400px]">
-                        <ChartContainer minHeight={350}>
+                      <CardContent className="p-1 h-[320px] flex items-center justify-center">
+                        <ChartContainer minHeight={280}>
                           <BarChart
                             data={hourlyWatchData}
-                            margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
-                            barSize={15}
+                            margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
+                            barSize={12}
                           >
                             <XAxis
                               dataKey="name"
-                              tick={{ fontSize: 10, fill: "#FFFFFF" }}
+                              tick={{ fontSize: 9, fill: "#FFFFFF" }}
                               stroke="#FFFFFF"
                             />
                             <YAxis
-                              tick={{ fontSize: 10, fill: "#FFFFFF" }}
+                              tick={{ fontSize: 9, fill: "#FFFFFF" }}
                               stroke="#FFFFFF"
                               tickFormatter={formatNumber}
                             />
                             <Tooltip
                               contentStyle={tooltipContentStyle}
-                              formatter={(value) => [value, "Videos Watched"]}
+                              formatter={(value, name, props) => {
+                                const hour = parseInt(props.payload.name);
+                                // Use the smooth color transition function
+                                const color = getHourColor(hour);
+                                return [
+                                  <span style={{ color: "#FFFFFF" }}>{value}</span>,
+                                  <span style={{ color: color }}>Videos Watched</span>
+                                ];
+                              }}
                             />
                             <Bar 
                               dataKey="count" 
@@ -631,9 +704,8 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                               radius={[4, 4, 0, 0]}
                             >
                               {hourlyWatchData.map((entry, index) => {
-                                // Create a gradient color based on the hour (night vs day)
-                                const isDaytime = index >= 7 && index <= 19;
-                                return <Cell key={`cell-${index}`} fill={isDaytime ? "#FFD700" : "#2196F3"} />;
+                                // Use the smooth color transition function
+                                return <Cell key={`cell-${index}`} fill={getHourColor(index)} />;
                               })}
                             </Bar>
                           </BarChart>
@@ -644,39 +716,67 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
 
                   <SlideIn from="right" delay={0.4} duration={0.5}>
                     <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
-                      <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
-                        <CardTitle className="text-sm font-medium text-white">Day vs Night Watching</CardTitle>
+                      <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
+                        <CardTitle className="text-xs font-medium text-white">Day vs Night Watching</CardTitle>
                       </CardHeader>
-                      <CardContent className="p-2 h-[400px]">
-                        <ChartContainer minHeight={350}>
-                          <PieChart>
-                            <Pie
-                              data={[
-                                { 
-                                  name: "Daytime (7AM-7PM)", 
-                                  value: hourlyWatchData.slice(7, 20).reduce((sum, hour) => sum + hour.count, 0) 
-                                },
-                                { 
-                                  name: "Nighttime (7PM-7AM)", 
-                                  value: hourlyWatchData.slice(0, 7).concat(hourlyWatchData.slice(20)).reduce((sum, hour) => sum + hour.count, 0) 
-                                }
-                              ]}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              outerRadius={120}
-                              fill="#8884d8"
-                              dataKey="value"
-                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                            >
-                              <Cell fill="#FFD700" />
-                              <Cell fill="#2196F3" />
-                            </Pie>
-                            <Tooltip
-                              contentStyle={tooltipContentStyle}
-                              formatter={(value) => [value, "Videos Watched"]}
-                            />
-                          </PieChart>
+                      <CardContent className="p-1 h-[320px] flex items-center justify-center">
+                        <ChartContainer minHeight={280}>
+                          <div className="relative">
+                            <PieChart width={350} height={280}>
+                              <Pie
+                                data={[
+                                  { 
+                                    name: "Daytime (7AM-7PM)", 
+                                    value: hourlyWatchData.slice(7, 20).reduce((sum, hour) => sum + hour.count, 0) 
+                                  },
+                                  { 
+                                    name: "Nighttime (7PM-7AM)", 
+                                    value: hourlyWatchData.slice(0, 7).concat(hourlyWatchData.slice(20)).reduce((sum, hour) => sum + hour.count, 0) 
+                                  }
+                                ]}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                outerRadius={100}
+                                fill="#8884d8"
+                                dataKey="value"
+                                label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                              >
+                                <Cell fill="#FFD700" />
+                                <Cell fill="#2196F3" />
+                              </Pie>
+                              <Tooltip
+                                contentStyle={tooltipContentStyle}
+                                formatter={(value, name) => {
+                                  // Convert name to string to safely use includes() method
+                                  const nameStr = String(name);
+                                  const color = nameStr.includes("Daytime") ? "#FFD700" : "#2196F3";
+                                  return [
+                                    <span style={{ color: "#FFFFFF" }}>{value}</span>,
+                                    <span style={{ color }}>{nameStr}</span>
+                                  ];
+                                }}
+                              />
+                            </PieChart>
+                            {/* Positioned Sun icon */}
+                            <div className="absolute text-white" style={{ top: '35%', left: '30%', transform: 'translate(-50%, -50%)' }}>
+                              <Sun className="h-6 w-6 text-yellow-400" />
+                            </div>
+                            {/* Positioned Moon icon */}
+                            <div className="absolute text-white" style={{ top: '35%', left: '70%', transform: 'translate(-50%, -50%)' }}>
+                              <Moon className="h-6 w-6 text-blue-400" />
+                            </div>
+                          </div>
+                          <div className="flex justify-center">
+                            <div className="flex items-center gap-1">
+                              <Sun className="h-4 w-4 text-yellow-500" />
+                              <span className="text-xs text-yellow-500">Day</span>
+                            </div>
+                            <div className="flex items-center gap-1 ml-4">
+                              <Moon className="h-4 w-4 text-blue-500" />
+                              <span className="text-xs text-blue-500">Night</span>
+                            </div>
+                          </div>
                         </ChartContainer>
                       </CardContent>
                     </Card>
