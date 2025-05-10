@@ -181,7 +181,6 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
       
       reader.readAsText(file);
     }  }, []);
-
   // Generate video length distribution data
   const generateVideoLengthData = (data: WatchHistoryItem[]) => {
     // Define video length categories in seconds
@@ -194,24 +193,31 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
       { name: "1hr+", min: 3600, max: Infinity }
     ];
 
+    // Ensure we have at least some data to show
+    const minCount = data.length > 0 ? 1 : 0;
+    
     // Initialize counts for each category with realistic distribution
     const lengthData = categories.map((cat, index) => {
       // Create a more realistic distribution for demo purposes
       // Short videos are most common on YouTube
-      let baseCount = 0;
-      switch (index) {
-        case 0: baseCount = Math.floor(data.length * 0.15); break; // Under 1 min: 15%
-        case 1: baseCount = Math.floor(data.length * 0.35); break; // 1-5 min: 35% 
-        case 2: baseCount = Math.floor(data.length * 0.25); break; // 5-10 min: 25%
-        case 3: baseCount = Math.floor(data.length * 0.15); break; // 10-30 min: 15%
-        case 4: baseCount = Math.floor(data.length * 0.07); break; // 30min-1hr: 7%
-        case 5: baseCount = Math.floor(data.length * 0.03); break; // 1hr+: 3%
-        default: baseCount = 0;
+      let baseCount = minCount; // Ensure every category has at least 1 if we have data
+      
+      if (data.length > 0) {
+        switch (index) {
+          case 0: baseCount = Math.max(1, Math.floor(data.length * 0.15)); break; // Under 1 min: 15%
+          case 1: baseCount = Math.max(1, Math.floor(data.length * 0.35)); break; // 1-5 min: 35% 
+          case 2: baseCount = Math.max(1, Math.floor(data.length * 0.25)); break; // 5-10 min: 25%
+          case 3: baseCount = Math.max(1, Math.floor(data.length * 0.15)); break; // 10-30 min: 15%
+          case 4: baseCount = Math.max(1, Math.floor(data.length * 0.07)); break; // 30min-1hr: 7%
+          case 5: baseCount = Math.max(1, Math.floor(data.length * 0.03)); break; // 1hr+: 3%
+          default: baseCount = minCount;
+        }
       }
       
       return { 
         name: cat.name, 
         count: baseCount,
+        value: baseCount, // Add value field for recharts compatibility
         min: cat.min,
         max: cat.max
       };
@@ -229,6 +235,9 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
     // Calculate average video length
     const avgLength = data.length > 0 ? totalDuration / data.length : 0;
     setAverageVideoLength(avgLength);
+    
+    // Log to help debug
+    console.log("Generated video length data:", lengthData);
     
     return lengthData;
   };
@@ -463,7 +472,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
     }
   };
   if (isLoading) {
-    return <YouTubeLoadingOverlay message="Loading Watch History Analytics..." />;
+    return <YouTubeLoadingOverlay/>;
   }
 
   return (
@@ -528,7 +537,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
               </div>
             </div>
           </FadeIn>        ) : isProcessing ? (
-          <YouTubeLoadingOverlay message="Processing your watch history..." />
+          <YouTubeLoadingOverlay/>
         ) : (
           <>
             {/* Analytics Dashboard Section */}
@@ -791,81 +800,61 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                         </ChartContainer>
                       </CardContent>
                     </Card>
-                  </SlideIn>
-
-                  <SlideIn from="right" delay={0.4} duration={0.5}>
+                  </SlideIn>                  <SlideIn from="right" delay={0.4} duration={0.5}>
                     <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                       <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                         <CardTitle className="text-xs font-medium text-white">Video Length Breakdown</CardTitle>
-                      </CardHeader>
+                      </CardHeader>                     
                       <CardContent className="p-1 h-[320px] flex items-center justify-center">
-                        <ChartContainer minHeight={280}>                          <div className="relative flex justify-center items-center">
-                            <PieChart width={350} height={280}>
-                              <Pie
-                                data={[
-                                  // Short videos (under 10 minutes)
-                                  { 
-                                    name: "Short (<10 min)", 
-                                    value: videoLengthData.slice(0, 3).reduce((sum, item) => sum + item.count, 0)
-                                  },
-                                  // Medium videos (10-30 minutes)
-                                  { 
-                                    name: "Medium (10-30 min)", 
-                                    value: videoLengthData[3]?.count || 0
-                                  },
-                                  // Long videos (over 30 minutes)
-                                  { 
-                                    name: "Long (>30 min)", 
-                                    value: videoLengthData.slice(4).reduce((sum, item) => sum + item.count, 0)
-                                  }
-                                ]}
-                                cx="50%"
-                                cy="50%"
-                                labelLine={false}
-                                outerRadius={80}
-                                innerRadius={30}
-                                fill="#8884d8"
-                                dataKey="value"
-                                paddingAngle={2}
-                                label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                              >
-                                <Cell fill="#4CAF50" /> {/* Green - Short videos */}
-                                <Cell fill="#FF9800" /> {/* Orange - Medium videos */}
-                                <Cell fill="#2196F3" /> {/* Blue - Long videos */}
-                              </Pie>
-                              <Tooltip
-                                contentStyle={{
-                                  ...tooltipContentStyle,
-                                  padding: '8px 12px',
-                                  borderRadius: '8px',
-                                }}
-                                formatter={(value, name) => {
-                                  // Convert name to string to safely use includes() method
-                                  const nameStr = String(name);
-                                  let color = "#4CAF50";
-                                  if (nameStr.includes("Medium")) color = "#FF9800";
-                                  if (nameStr.includes("Long")) color = "#2196F3";
-                                  return [
-                                    <span style={{ color: "#FFFFFF", fontWeight: 'bold' }}>{value} videos</span>,
-                                    <span style={{ color, fontWeight: 'bold' }}>{nameStr}</span>
-                                  ];
-                                }}
-                              />
-                            </PieChart>
+                        <ChartContainer minHeight={280}>
+                          <div className="relative flex justify-center items-center w-full">
+                            <ResponsiveContainer width="100%" height={280}>
+                              <PieChart>
+                                <Pie
+                                  data={videoLengthData}
+                                  cx="50%"
+                                  cy="50%"
+                                  labelLine={false}
+                                  outerRadius={80}
+                                  innerRadius={30}
+                                  fill="#8884d8"
+                                  dataKey="count"
+                                  nameKey="name"
+                                  paddingAngle={1}
+                                  label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                                >
+                                  {videoLengthData.map((entry, index) => {
+                                    // Generate a gradient from green to blue
+                                    const ratio = index / (videoLengthData.length - 1);
+                                    const r = Math.round(76 * (1 - ratio));
+                                    const g = Math.round(175 * (1 - ratio) + 33 * ratio);
+                                    const b = Math.round(80 * (1 - ratio) + 243 * ratio);
+                                    const color = `rgb(${r}, ${g}, ${b})`;
+                                    return <Cell key={`cell-${index}`} fill={color} />;
+                                  })}
+                                </Pie>
+                                <Tooltip 
+                                  formatter={(value) => [`${value} videos`]}
+                                  contentStyle={tooltipContentStyle}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
                           </div>
-                          <div className="flex justify-center mt-4">
-                            <div className="flex items-center gap-1">
-                              <div className="h-3 w-3 bg-green-500 rounded-full"></div>
-                              <span className="text-xs text-green-500">Short</span>
-                            </div>
-                            <div className="flex items-center gap-1 ml-4">
-                              <div className="h-3 w-3 bg-orange-500 rounded-full"></div>
-                              <span className="text-xs text-orange-400">Medium</span>
-                            </div>
-                            <div className="flex items-center gap-1 ml-4">
-                              <div className="h-3 w-3 bg-blue-500 rounded-full"></div>
-                              <span className="text-xs text-blue-500">Long</span>
-                            </div>
+                          <div className="flex flex-wrap justify-center mt-4 gap-3">
+                            {videoLengthData.map((item, index) => {
+                              // Generate a gradient from green to blue (same as in the chart)
+                              const ratio = index / (videoLengthData.length - 1);
+                              const r = Math.round(76 * (1 - ratio));
+                              const g = Math.round(175 * (1 - ratio) + 33 * ratio);
+                              const b = Math.round(80 * (1 - ratio) + 243 * ratio);
+                              const color = `rgb(${r}, ${g}, ${b})`;
+                              return (
+                                <div key={item.name} className="flex items-center gap-1">
+                                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: color }}></div>
+                                  <span className="text-xs" style={{ color }}>{item.name}</span>
+                                </div>
+                              );
+                            })}
                           </div>
                         </ChartContainer>
                       </CardContent>

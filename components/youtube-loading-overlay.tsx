@@ -14,23 +14,11 @@ const BACKUP_GIFS = [
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWJodjY0cnM5aXcyZHFneGFveWh2ejA4ejA4eGVoZjh6bmhleG9xbyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0HlBO7eyXzSZkJri/giphy.gif"
 ];
 
-// Fun YouTube-style video titles with Simpsons theme
-const VIDEO_TITLES = [
-  "The Simpsons Predict Your YouTube History (And They Were Right!)",
-  "Homer Simpson Analyzes Your Watch History 🍩",
-  "Springfield's Secret Algorithm: How YouTube Really Works",
-  "The Simpsons Data Science: Understanding Your Viewing Habits",
-  "D'oh! What Your YouTube History Says About You (Simpsons Edition)"
-];
+// YouTube video title
+const VIDEO_TITLE = "The Simpsons Predict Your YouTube History (And They're Right!)";
 
 // YouTube channel names with Simpsons theme
-const CHANNEL_NAMES = [
-  "Springfield Analytics",
-  "Kwik-E-Mart Tech Tips",
-  "Duff Data Science",
-  "Nuclear Power Stats",
-  "Mr. Plow's Analytics"
-];
+const CHANNEL_NAME = "Youtube Analytics";
 
 // Loading process titles
 const LOADING_TITLES = [
@@ -55,15 +43,11 @@ const randomInRange = (min: number, max: number): number => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-interface YouTubeLoadingOverlayProps {
-  message?: string
-}
-
-export function YouTubeLoadingOverlay({ message = "Processing your watch history..." }: YouTubeLoadingOverlayProps) {
+export function YouTubeLoadingOverlay() {
   // Use fixed values initially to prevent hydration errors
   const [loadingGif, setLoadingGif] = useState(SIMPSONS_GIF);
-  const [videoTitle, setVideoTitle] = useState(VIDEO_TITLES[0]);
-  const [channelName, setChannelName] = useState(CHANNEL_NAMES[0]);
+  const [videoTitle, setVideoTitle] = useState(VIDEO_TITLE);
+  const [channelName, setChannelName] = useState(CHANNEL_NAME);
   const [viewCount, setViewCount] = useState(845800); // Fixed value to prevent hydration errors
   const [likeCount, setLikeCount] = useState(42300); // Fixed value to prevent hydration errors
   const [publishDate, setPublishDate] = useState("May 10, 2025");
@@ -84,14 +68,12 @@ export function YouTubeLoadingOverlay({ message = "Processing your watch history
     if (!isClient) return;
     
     // Select random elements to create a YouTube-like experience
-    const randomVideoTitleIndex = Math.floor(Math.random() * VIDEO_TITLES.length);
-    const randomChannelIndex = Math.floor(Math.random() * CHANNEL_NAMES.length);
     const randomTitleIndex = Math.floor(Math.random() * LOADING_TITLES.length);
     
     // Always use Simpsons GIF
     setLoadingGif(SIMPSONS_GIF);
-    setVideoTitle(VIDEO_TITLES[randomVideoTitleIndex]);
-    setChannelName(CHANNEL_NAMES[randomChannelIndex]);
+    setVideoTitle(VIDEO_TITLE);
+    setChannelName(CHANNEL_NAME);
     setLoadingTitle(LOADING_TITLES[randomTitleIndex]);
     
     // Now that we're on client-side, we can safely set random values
@@ -110,28 +92,16 @@ export function YouTubeLoadingOverlay({ message = "Processing your watch history
     }, 800);
     
     return () => clearInterval(interval);
-  }, [isClient]);
-  return (    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center overflow-hidden">
+  }, [isClient]);  return (    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center overflow-hidden">
       {/* YouTube-style player container */}
-      <div className="w-full max-w-4xl bg-zinc-900 rounded-lg overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">{/* Header with YouTube logo */}
-        <div className="bg-zinc-900 px-4 py-2 border-b border-zinc-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Youtube className="h-6 w-6 text-red-600" />
-            <span className="text-white font-semibold">YouTube</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="w-32 h-8 bg-zinc-800 rounded-md"></div>
-            <div className="w-8 h-8 bg-zinc-800 rounded-full"></div>
-          </div>
-        </div>          
-        
-        {/* Video player area with expanded loading gif that takes up the full height */}
-        <div className="bg-black flex items-center justify-center relative" style={{ height: "calc(100vh - 350px)", minHeight: "350px" }}>          
-          {/* Loading GIF in the center of the player - expanded to fill available space */}          
+      <div className="w-full max-w-3xl bg-zinc-900 rounded-lg overflow-hidden shadow-2xl flex flex-col" style={{ maxHeight: "600px" }}>
+        {/* Video player area with optimized loading gif */}
+        <div className="bg-black flex items-center justify-center relative" style={{ height: "280px", maxHeight: "280px" }}>          
+          {/* Loading GIF in the center of the player - optimized to fit properly */}          
           <img 
             src={loadingGif}
             alt="Loading animation" 
-            className="w-full h-full object-cover animate-half-speed"
+            className="w-full h-full object-contain animate-half-speed"
             style={{ 
               animationPlayState: 'running', 
               // Apply CSS animation to slow down the GIF (half speed)
@@ -153,7 +123,7 @@ export function YouTubeLoadingOverlay({ message = "Processing your watch history
             {/* No buffering indicator - removed as requested */}
         </div>
           {/* Video information section */}
-        <div className="p-4 overflow-y-auto" style={{ maxHeight: "200px" }}>
+        <div className="p-4 overflow-hidden" style={{ maxHeight: "none" }}>
           {/* Video title */}
           <h2 className="text-lg font-semibold text-white mb-2">{videoTitle}</h2>
           
@@ -207,55 +177,7 @@ export function YouTubeLoadingOverlay({ message = "Processing your watch history
             </div>
             <button className="bg-red-600 text-white px-4 py-2 rounded-full text-sm font-medium">
               SUBSCRIBE
-            </button>
-          </div>          {/* Processing message card removed as requested */}
-          
-          {/* Comments section for additional realism */}
-          <div className="mt-6 border-t border-zinc-800 pt-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-medium">Comments</h3>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-zinc-400" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M21,6H3V5h18V6z M15,11H3v1h12V11z M15,17H3v1h12V17z"></path>
-                </svg>
-                <span className="text-white text-sm font-medium">SORT BY</span>
-              </div>
-            </div>
-            
-            {/* Comment placeholder */}
-            <div className="flex gap-3 mb-4 animate-pulse">
-              <div className="w-10 h-10 rounded-full bg-zinc-800"></div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="h-3 w-32 bg-zinc-800 rounded"></div>
-                  <div className="h-2 w-16 bg-zinc-800 rounded"></div>
-                </div>
-                <div className="h-2 w-full bg-zinc-800 rounded mb-1"></div>
-                <div className="h-2 w-4/5 bg-zinc-800 rounded mb-2"></div>
-                <div className="flex gap-2">
-                  <div className="h-4 w-8 bg-zinc-800 rounded"></div>
-                  <div className="h-4 w-8 bg-zinc-800 rounded"></div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Another comment placeholder */}
-            <div className="flex gap-3 animate-pulse">
-              <div className="w-10 h-10 rounded-full bg-zinc-800"></div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="h-3 w-24 bg-zinc-800 rounded"></div>
-                  <div className="h-2 w-16 bg-zinc-800 rounded"></div>
-                </div>
-                <div className="h-2 w-full bg-zinc-800 rounded mb-1"></div>
-                <div className="h-2 w-3/5 bg-zinc-800 rounded mb-2"></div>
-                <div className="flex gap-2">
-                  <div className="h-4 w-8 bg-zinc-800 rounded"></div>
-                  <div className="h-4 w-8 bg-zinc-800 rounded"></div>
-                </div>
-              </div>
-            </div>
-          </div>
+            </button>          </div>          {/* Processing message card removed as requested */}
         </div>
       </div>
     </div>
