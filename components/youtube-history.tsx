@@ -8,37 +8,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Skeleton } from "./ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Badge } from "./ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { InfoIcon, Clock, ThumbsUp, PlaySquare, User, ListVideo, BarChart2, Home, RefreshCw } from "lucide-react";
+import { Clock, ThumbsUp, PlaySquare, User, ListVideo, BarChart2, RefreshCw } from "lucide-react";
 
 import { useAllYouTubeData } from "@/hooks/use-youtube-data";
 import { formatNumber, formatDuration } from "@/lib/utils";
 
-// Debugging component to show session information
-const SessionDebug = ({ session }: { session: any }) => {
-  return (
-    <Alert className="mb-4">
-      <InfoIcon className="h-4 w-4" />
-      <AlertTitle>Session Debug Info</AlertTitle>
-      <AlertDescription className="mt-2 text-xs">
-        <p>Has accessToken: {session?.accessToken ? "Yes" : "No"}</p>
-        <p>User: {session?.user?.email || "Not available"}</p>
-        <details className="mt-2">
-          <summary>Token details (click to expand)</summary>
-          <pre className="text-xs mt-2 bg-slate-100 p-2 rounded overflow-auto max-h-40">
-            {JSON.stringify(session, null, 2)}
-          </pre>
-        </details>
-      </AlertDescription>
-    </Alert>
-  );
-};
-
-export default function YouTubeHistory() {
-  const { data: session, status } = useSession();
+export default function YouTubeHistory() {  const { data: session, status } = useSession();
   const router = useRouter();
-  
-  const [showDebug, setShowDebug] = useState(true);
   
   // Use our React Query hook to fetch all YouTube data
   const {
@@ -50,13 +26,7 @@ export default function YouTubeHistory() {
     isLoading,
     isError,
     error,
-    refetch
-  } = useAllYouTubeData();
-
-  // Navigate to detailed exploration page
-  const goToHomePage = () => {
-    router.push('/');
-  };
+    refetch  } = useAllYouTubeData();
 
   if (status === "loading") {
     return (
@@ -92,18 +62,9 @@ export default function YouTubeHistory() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+    <div className="space-y-6">      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <h2 className="text-3xl font-bold">Your YouTube Data</h2>
-        <div className="flex mt-2 md:mt-0 space-x-2">
-          <Button
-            onClick={goToHomePage}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Home className="h-4 w-4" />
-            <span>Back to Dashboard</span>
-          </Button>
+        <div className="flex mt-2 md:mt-0">
           <Button 
             onClick={() => refetch()}
             variant="outline" 
@@ -113,31 +74,9 @@ export default function YouTubeHistory() {
             <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             <span>{isLoading ? "Loading..." : "Refresh"}</span>
           </Button>
-        </div>
-      </div>
+        </div>      </div>
       
-      {/* Show debug info - can be toggled */}
-      {showDebug && session && (
-        <div className="mb-4">
-          <SessionDebug session={session} />
-          <div className="flex justify-end">
-            <Button variant="outline" size="sm" onClick={() => setShowDebug(false)}>
-              Hide Debug Info
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {!showDebug && (
-        <div className="flex justify-end mb-4">
-          <Button variant="outline" size="sm" onClick={() => setShowDebug(true)}>
-            Show Debug Info
-          </Button>
-        </div>
-      )}
-      
-      <Tabs defaultValue="channel">
-        <TabsList className="mb-4">
+      <Tabs defaultValue="channel">        <TabsList className="mb-4">
           <TabsTrigger value="channel" className="flex items-center gap-1">
             <User className="h-4 w-4" />
             <span>Channel</span>
@@ -145,10 +84,6 @@ export default function YouTubeHistory() {
           <TabsTrigger value="liked" className="flex items-center gap-1">
             <ThumbsUp className="h-4 w-4" />
             <span>Liked Videos</span>
-          </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center gap-1">
-            <Clock className="h-4 w-4" />
-            <span>Watch History</span>
           </TabsTrigger>
           <TabsTrigger value="playlists" className="flex items-center gap-1">
             <ListVideo className="h-4 w-4" />
@@ -344,80 +279,7 @@ export default function YouTubeHistory() {
                 </Card>
               ))}
             </div>
-          )}
-        </TabsContent>
-                
-        {/* WATCH HISTORY TAB */}
-        <TabsContent value="history" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold">Watch History</h3>
-          </div>
-          
-          {isError && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-              <p className="text-red-700">{error instanceof Error ? error.message : "An error occurred"}</p>
-            </div>
-          )}
-          
-          {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex gap-4">
-                  <Skeleton className="h-24 w-32 rounded" />
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                    <Skeleton className="h-4 w-1/4" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : watchHistory.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <p>No watch history found or accessible via the API.</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {watchHistory.map((video) => (
-                <Card key={video.videoId || video.id} className="overflow-hidden">
-                  <div className="flex p-4">
-                    {video.thumbnail ? (
-                      <img
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className="w-32 h-24 object-cover rounded mr-4"
-                      />
-                    ) : (
-                      <div className="w-32 h-24 bg-slate-200 rounded mr-4 flex items-center justify-center">
-                        <span className="text-sm text-slate-500">No thumbnail</span>
-                      </div>
-                    )}
-                    <div className="flex flex-col flex-1">
-                      <a
-                        href={`https://www.youtube.com/watch?v=${video.videoId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-lg font-medium text-blue-600 hover:underline"
-                      >
-                        {video.title || "Untitled Video"}
-                      </a>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-sm text-gray-600">
-                          {video.videoOwnerChannelTitle || "Unknown channel"}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-auto">
-                        Watched: {new Date(video.publishedAt).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
+          )}        </TabsContent>
         
         {/* PLAYLISTS TAB */}
         <TabsContent value="playlists" className="space-y-4">

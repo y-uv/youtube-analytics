@@ -1,0 +1,55 @@
+/* Custom scrollbar styles for the application */
+
+/* For WebKit browsers (Chrome, Safari, newer Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* Light mode scrollbars */
+:root {
+  --scrollbar-track-light: #f1f1f1;
+  --scrollbar-thumb-light: #d1d1d1;
+  --scrollbar-thumb-hover-light: #b1b1b1;
+  
+  --scrollbar-track-dark: #222831;
+  --scrollbar-thumb-dark: #393E46;
+  --scrollbar-thumb-hover-dark: #4a5261;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover-light);
+}
+
+/* Dark mode scrollbars */
+.dark ::-webkit-scrollbar-track {
+  background: var(--scrollbar-track-dark);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-dark);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover-dark);
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb-light) var(--scrollbar-track-light);
+}
+
+.dark * {
+  scrollbar-color: var(--scrollbar-thumb-dark) var(--scrollbar-track-dark);
+}

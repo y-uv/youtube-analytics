@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import './scrollbar-styles.css'  // Import custom scrollbar styles
 import { ThemeProvider } from "@/components/theme-provider";
 import AuthProvider from "@/components/auth-provider";
 import { QueryProvider } from '@/components/query-provider';

@@ -16,13 +16,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import { Cloud, Clock, Calendar, Youtube, ArrowLeft, RefreshCw, FileJson, Sun, Moon } from "lucide-react"
+import { Cloud, Clock, Calendar, Youtube, ArrowLeft, RefreshCw, FileJson, Sun, Moon, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FadeIn, SlideIn } from "@/components/motion-wrapper"
 import { ChartContainer } from "@/components/ui/chart"
 import { YouTubeLoadingOverlay } from "@/components/youtube-loading-overlay"
+import { TakeoutInstructionsOverlay } from "@/components/takeout-instructions-overlay"
 import type { WatchHistoryItem } from "@/types/youtube"
 
 // Define constant colors
@@ -92,6 +93,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
   const [averageVideoLength, setAverageVideoLength] = useState<number>(0);
   const [fileUploaded, setFileUploaded] = useState(watchHistory.length > 0);
   const [dragActive, setDragActive] = useState(false);
+  const [showTakeoutInstructions, setShowTakeoutInstructions] = useState(false);
 
   // Generate analytics when watch history data is available
   useEffect(() => {
@@ -549,27 +551,37 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
 
         {!fileUploaded && !isProcessing ? (
           <FadeIn delay={0.2} duration={0.5}>
-            <div className="flex flex-col items-center justify-center py-20">
-              <h2 className="text-2xl font-semibold mb-6">Upload Your Watch History</h2>
-              <p className="text-muted-foreground mb-8 text-center max-w-2xl">
+            <div className="flex flex-col items-center justify-center py-10">              <h2 className="text-2xl font-semibold mb-4">Upload Your Watch History</h2>              <p className="text-zinc-700 dark:text-zinc-300 mb-4 text-center max-w-2xl">
                 Analyze your YouTube watch patterns by uploading your watch-history.json file. 
                 <br />Get insights into your viewing habits, top channels, and more.
+              </p>              <p className="text-zinc-500 dark:text-zinc-400 mb-2 text-center">
+                Need your watch history file? Get it from <a href="https://takeout.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline font-bold">Google Takeout</a>
               </p>
+              <div className="mb-4 text-center">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowTakeoutInstructions(true)} 
+                  className="px-4 flex items-center gap-2 border-blue-200 dark:border-blue-900 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                >
+                  <Download className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <span className="font-bold">Show me how</span>
+                </Button>
+              </div>
               
               <div
                 className={`inline-flex items-center gap-2 px-6 py-10 rounded-lg border ${
                   dragActive ? "border-primary ring-1 ring-primary" : "border-zinc-800/30"
-                } bg-zinc-900/30 w-full max-w-md flex-col`}
+                } bg-zinc-100 dark:bg-zinc-900/30 w-full max-w-md flex-col`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
               >
-                <FileJson className="h-12 w-12 text-yellow-400 mb-2" />
+                <FileJson className="h-12 w-12 text-yellow-600 dark:text-yellow-400 mb-2" />
                 <span className="text-center mb-4">
                   Drop your <strong>watch-history.json</strong> file here
                   <br />
-                  <span className="text-sm text-muted-foreground">or</span>
+                  <span className="text-sm text-zinc-500 dark:text-zinc-400">or</span>
                 </span>
                 <input 
                   type="file" 
@@ -580,7 +592,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                 />
                 <Button 
                   variant="default" 
-                  className="bg-yellow-600 hover:bg-yellow-700"
+                  className="bg-yellow-400 hover:bg-yellow-500"
                   onClick={() => {
                     document.getElementById('watch-history-upload')?.click();
                   }}
@@ -724,20 +736,23 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                             />                            <Bar 
                               dataKey="count" 
                               name="Videos Watched" 
+                              fill={CHART_COLORS.primary}
                               radius={[4, 4, 0, 0]}
                             >
                               {hourlyWatchData.map((entry, index) => {
-                                // Find max count to normalize values
-                                const maxCount = Math.max(...hourlyWatchData.map(h => h.count || 0), 1);
-                                // Higher counts are green, lower counts are pastel blue
-                                const ratio = (entry.count || 0) / maxCount;
+                                // Calculate color based on count value for a gradient effect from green to blue
+                                // Find the max count to normalize
+                                const maxCount = Math.max(...hourlyWatchData.map(item => item.count));
+                                // Safety check to prevent division by zero
+                                const ratio = maxCount > 0 ? entry.count / maxCount : 0;
                                 
-                                // Use the same green to pastel blue gradient as other charts
-                                const r = Math.round(76 * ratio + 150 * (1 - ratio));
-                                const g = Math.round(175 * ratio + 180 * (1 - ratio));
-                                const b = Math.round(80 * ratio + 210 * (1 - ratio));
+                                // Green (top/higher values) to blue (bottom/lower values) gradient 
+                                const r = Math.round(76 * ratio + 33 * (1 - ratio));       // 76 (green) to 33 (blue)
+                                const g = Math.round(175 * ratio + 150 * (1 - ratio));     // 175 (green) to 150 (blue)
+                                const b = Math.round(80 * ratio + 243 * (1 - ratio));      // 80 (green) to 243 (blue)
                                 
-                                return <Cell key={`cell-${index}`} fill={`rgb(${r}, ${g}, ${b})`} />;
+                                const color = `rgb(${r}, ${g}, ${b})`;
+                                return <Cell key={`cell-${index}`} fill={color} />;
                               })}
                             </Bar>
                           </BarChart>
@@ -838,18 +853,21 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                               labelFormatter={(name) => <b>{name}</b>}
                               separator=": "
                               wrapperStyle={{ whiteSpace: 'nowrap' }}
-                            />
-                            <Bar 
+                            />                            <Bar 
                               dataKey="count" 
                               name="Videos"
+                              fill={CHART_COLORS.primary}
                               radius={[4, 4, 0, 0]}
                             >
-                              {videoLengthData.map((_, index) => {                                // Generate a gradient from green to pastel blue
-                                const ratio = index / (videoLengthData.length - 1);
+                              {videoLengthData.map((_, index) => {
+                                // Generate a gradient from green to pastel blue with safe division - same as pie chart
+                                const divisor = Math.max(1, videoLengthData.length - 1);
+                                const ratio = index / divisor;
                                 const r = Math.round(76 * (1 - ratio) + 150 * ratio);      // Increase red for pastel
                                 const g = Math.round(175 * (1 - ratio) + 180 * ratio);     // Higher green for pastel
                                 const b = Math.round(80 * (1 - ratio) + 210 * ratio);      // Slightly lower blue
-                                return <Cell key={`cell-${index}`} fill={`rgb(${r}, ${g}, ${b})`} />;
+                                const color = `rgb(${r}, ${g}, ${b})`;
+                                return <Cell key={`cell-${index}`} fill={color} />;
                               })}
                             </Bar>
                           </BarChart>
@@ -980,9 +998,13 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                     </CardContent>
                   </Card>
                 </SlideIn>
-              </TabsContent>
-            </Tabs>
+              </TabsContent>            </Tabs>
           </>
+        )}
+        
+        {/* Takeout Instructions Overlay */}
+        {showTakeoutInstructions && (
+          <TakeoutInstructionsOverlay onClose={() => setShowTakeoutInstructions(false)} />
         )}
       </div>
     </div>

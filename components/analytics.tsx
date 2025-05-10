@@ -17,10 +17,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import { FileJson, Github, LogIn, Settings, Youtube, RefreshCw, BarChart3 } from "lucide-react"
+import { FileJson, LogIn, Settings, Youtube, RefreshCw, BarChart3, Moon as MoonIcon, Sun as SunIcon } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FadeIn, SlideIn } from "@/components/motion-wrapper";
@@ -74,6 +75,7 @@ const legendFormatter = (value: string) => {
 
 // Define constant colors with our new color scheme - matching watch-history-analytics.tsx
 const CHART_COLORS = {
+  primary: "#FFD700",   // Golden for primary charts (matching watch-history-analytics.tsx)
   likes: "#FF5252",     // Red for likes (matching secondary in watch-history)
   playlists: "#4CAF50", // Green for playlists (matching tertiary in watch-history)
   subscriptions: "#2196F3", // Blue for subscriptions (matching quaternary in watch-history)
@@ -249,20 +251,9 @@ export function Analytics() {
                   </Button>
                 </>
               )}
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Github className="h-4 w-4" />
-                  <span className="sr-only">GitHub</span>
-                </Button>
-              </a>
-              {session ? (
+              {session && (
                 <Button variant="outline" size="sm" onClick={() => signOut()}>
                   Sign Out
-                </Button>
-              ) : (
-                <Button size="sm" onClick={() => signIn("google")}>
-                  <LogIn className="h-3 w-3 mr-1.5" />
-                  Login with Google
                 </Button>
               )}
             </div>
@@ -315,7 +306,7 @@ export function Analytics() {
                   <Button 
                     variant="default" 
                     size="sm" 
-                    className="bg-yellow-600 hover:bg-yellow-700"
+                    className="bg-yellow-400 hover:bg-yellow-500"
                     onClick={() => window.location.href = '/watch-history'}
                   >
                     <BarChart3 className="h-4 w-4 mr-1.5" />
@@ -325,7 +316,7 @@ export function Analytics() {
               </FadeIn>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 grid-rows-2 gap-4 h-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 grid-rows-2 gap-4 h-full pb-8">
               <SlideIn from="top" delay={0.3} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg h-full">
                   <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
@@ -418,7 +409,7 @@ export function Analytics() {
                               ];
                             }}
                           />
-                          <Legend 
+                          {!isLoading && <Legend 
                             formatter={(value) => {
                               // Determine text color based on name
                               let textColor;
@@ -433,7 +424,7 @@ export function Analytics() {
                               }
                               return <span className="text-xs" style={{ color: textColor }}>{value}</span>;
                             }} 
-                          />
+                          />}
                         </PieChart>
                       </ChartContainer>
                     )}
@@ -483,7 +474,7 @@ export function Analytics() {
                           <Area 
                             type="monotone" 
                             dataKey="total" 
-                            stroke={CHART_COLORS.light} 
+                            stroke={"#FFFFFF"} 
                             fillOpacity={1} 
                             fill="url(#colorTotal)"
                             name="Total Activity" 
@@ -505,20 +496,26 @@ export function Analytics() {
                     </Button>
                   </CardHeader>
                   <CardContent className="flex items-center justify-center h-[calc(100%-2.75rem)]">
-                    <div className="grid grid-cols-3 gap-4 w-full px-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold" style={{ color: CHART_COLORS.likes }}>{formatNumber(totalLikes)}</div>
-                        <p className="text-xs mt-1" style={{ color: CHART_COLORS.likes }}>Liked Videos</p>
+                    {isLoading ? (
+                      <div className="text-center text-gray-400 dark:text-gray-600">
+                        <div className="animate-pulse bg-gray-300 dark:bg-gray-700 h-8 w-32 rounded mx-auto"></div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold" style={{ color: CHART_COLORS.playlists }}>{formatNumber(totalPlaylists)}</div>
-                        <p className="text-xs mt-1" style={{ color: CHART_COLORS.playlists }}>Playlists</p>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-4 w-full px-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold" style={{ color: CHART_COLORS.likes }}>{formatNumber(totalLikes)}</div>
+                          <p className="text-xs mt-1" style={{ color: CHART_COLORS.likes }}>Liked Videos</p>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold" style={{ color: CHART_COLORS.playlists }}>{formatNumber(totalPlaylists)}</div>
+                          <p className="text-xs mt-1" style={{ color: CHART_COLORS.playlists }}>Playlists</p>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold" style={{ color: CHART_COLORS.subscriptions }}>{formatNumber(totalSubscriptions)}</div>
+                          <p className="text-xs mt-1" style={{ color: CHART_COLORS.subscriptions }}>Subscriptions</p>
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold" style={{ color: CHART_COLORS.subscriptions }}>{formatNumber(totalSubscriptions)}</div>
-                        <p className="text-xs mt-1" style={{ color: CHART_COLORS.subscriptions }}>Subscriptions</p>
-                      </div>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
               </SlideIn>
@@ -529,9 +526,9 @@ export function Analytics() {
             <div className="h-[calc(100vh-3.5rem-2rem)] flex items-center justify-center">
               <Card className="w-full max-w-md bg-zinc-900/50 border-zinc-800/30 shadow-lg">
                 <CardHeader>
-                  <CardTitle className="text-zinc-200">Settings</CardTitle>
+                  <CardTitle className="text-gray-900 dark:text-zinc-200">Settings</CardTitle>
                   {session?.user && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Signed in as {session.user.name} ({session.user.email})
                     </p>
                   )}
@@ -548,17 +545,17 @@ export function Analytics() {
                     </TabsList>
                     <TabsContent value="account" className="space-y-4 mt-4">
                       <div className="space-y-2">
-                        <h3 className="text-sm font-medium text-zinc-200">Google Account</h3>
+                        <h3 className="text-sm font-medium text-gray-900 dark:text-zinc-200">Google Account</h3>
                         {session ? (
                           <>
-                            <p className="text-sm text-muted-foreground">You are connected with your Google account.</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">You are connected with your Google account.</p>
                             <Button size="sm" variant="outline" onClick={() => signOut()}>
                               Sign Out
                             </Button>
                           </>
                         ) : (
                           <>
-                            <p className="text-sm text-muted-foreground">Connect your Google account to access your YouTube data</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">Connect your Google account to access your YouTube data</p>
                             <Button size="sm" className="gap-2 mt-2 bg-violet-600 hover:bg-violet-700" onClick={() => signIn("google")}>
                               <LogIn className="h-3 w-3" />
                               Login with Google
@@ -569,15 +566,24 @@ export function Analytics() {
                     </TabsContent>
                     <TabsContent value="preferences" className="space-y-4 mt-4">
                       <div className="space-y-2">
-                        <h3 className="text-sm font-medium text-zinc-200">Data Preferences</h3>
-                        <p className="text-sm text-zinc-400">Choose what data to display on your dashboard</p>
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                          <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800">
-                            Reset Data
-                          </Button>
-                          <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800">
-                            Export Data
-                          </Button>
+                        <h3 className="text-sm font-medium text-gray-900 dark:text-zinc-200">Theme Settings</h3>
+                        <p className="text-sm text-gray-600 dark:text-zinc-400">Choose between light and dark mode</p>
+                        
+                        <div className="flex flex-col space-y-3 mt-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <MoonIcon className="h-4 w-4 text-gray-500 dark:text-zinc-400" />
+                              <span className="text-sm text-gray-700 dark:text-zinc-300">Dark Mode</span>
+                            </div>
+                            <Switch 
+                              checked={theme === "dark"} 
+                              onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                              className="data-[state=checked]:bg-violet-600"
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500 dark:text-zinc-500 italic">
+                            Current mode: {theme === "dark" ? "Dark" : "Light"}
+                          </p>
                         </div>
                       </div>
                     </TabsContent>

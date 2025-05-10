@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import YouTubeHistory from "@/components/youtube-history";
 import { Button } from "@/components/ui/button";
-import { Home } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function YouTubeDataPage() {
@@ -13,24 +12,19 @@ export default function YouTubeDataPage() {
   const router = useRouter();
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b">
-        <div>
-          <h1 className="text-3xl font-bold">YouTube Data Explorer</h1>
-          <p className="text-gray-500 mt-1">View and analyze your YouTube data</p>
-        </div>
-
-        <div className="mt-4 md:mt-0 flex items-center gap-3">
-          <Button
-            variant="outline"
+    <div className="container mx-auto px-4 py-8">      <header className="flex flex-row justify-between items-center mb-4 pb-2 border-b">
+        <div className="flex items-center gap-3">
+          <Button 
+            onClick={() => router.push('/')} 
+            className="gap-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+            variant="ghost" 
             size="sm"
-            onClick={() => router.push('/')}
-            className="flex items-center gap-2"
           >
-            <Home className="h-4 w-4" />
-            <span>Back to Dashboard</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide"><path d="m15 18-6-6 6-6"/></svg>
+            Back to Dashboard
           </Button>
-          
+        </div>
+        <div className="flex items-center gap-3">
           {status === "loading" && <p>Loading...</p>}
           
           {status === "authenticated" && session?.user && (
@@ -66,16 +60,9 @@ export default function YouTubeDataPage() {
             </button>
           )}
         </div>
-      </header>
-
-      {status === "authenticated" ? (
-        <>
-          <p className="mb-4 bg-yellow-50 p-4 border-l-4 border-yellow-500 text-sm">
-            <strong>Note:</strong> Open your browser console (F12 &gt; Console tab) to see detailed API responses and debug information.
-          </p>
-          <YouTubeHistory />
-        </>
-      ) : status === "unauthenticated" ? (
+      </header>      {status === "authenticated" ? (
+        <YouTubeHistory />
+      ): status === "unauthenticated" ? (
         <div className="text-center py-12">
           <h2 className="text-2xl font-semibold mb-4">Sign in to Access Your YouTube Data</h2>
           <p className="mb-8 max-w-2xl mx-auto text-gray-600">
