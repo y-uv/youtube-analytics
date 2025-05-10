@@ -424,7 +424,6 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
     
     return hourCounts;
   };
-
   // Generate top channels data
   const generateTopChannelsData = (data: WatchHistoryItem[]) => {
     const channelMap = new Map();
@@ -434,11 +433,19 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
         const channelName = item.subtitles[0].name;
         
         if (!channelMap.has(channelName)) {
-          channelMap.set(channelName, { name: channelName, count: 0 });
+          channelMap.set(channelName, { 
+            name: channelName, 
+            count: 0,
+            // Adding value for recharts compatibility
+            value: 0,
+            // Store full name for tooltip
+            fullName: channelName
+          });
         }
         
         const channelData = channelMap.get(channelName);
         channelData.count += 1;
+        channelData.value = channelData.count; // Keep value and count in sync
       }
     });
     
@@ -740,68 +747,80 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                     </Card>
                   </SlideIn>
                 </div>
-              </TabsContent>
-
-              <TabsContent value="channels">
+              </TabsContent>              <TabsContent value="channels">
                 <SlideIn from="left" delay={0.4} duration={0.5}>
                   <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
-                    <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
+                    <CardHeader className="py-1 px-3 flex flex-row justify-between items-center">
                       <CardTitle className="text-xs font-medium text-white">Top 15 Channels</CardTitle>
-                    </CardHeader>                    <CardContent className="p-1 h-[300px] flex items-center justify-center">
-                      <ChartContainer minHeight={290}>
-                        <BarChart
-                          data={channelData.slice(0, 15)}
-                          margin={{ top: 5, right: 25, left: 130, bottom: 15 }}
-                          layout="vertical"
-                          barSize={7}
-                          barGap={1}
-                        >                          <XAxis
-                            type="number"
-                            tick={{ fontSize: 9, fill: "#FFFFFF" }}
-                            stroke="#FFFFFF"
-                            tickFormatter={formatNumber}
-                          />
-                          <YAxis
-                            type="category"
-                            dataKey="name"
-                            tick={{ fontSize: 8, fill: "#FFFFFF" }}
-                            stroke="#FFFFFF"
-                            width={120}
-                          />                          <Tooltip
-                            contentStyle={tooltipContentStyle}
-                            formatter={(value) => [<span style={{ color: "#FFFFFF" }}>{value} videos</span>, null]}
-                            labelFormatter={(name) => <b>{name}</b>}
-                            separator=": "
-                            wrapperStyle={{ whiteSpace: 'nowrap' }}
-                          />
-                          <Bar 
-                            dataKey="count" 
-                            name="Videos Watched" 
-                            radius={[0, 4, 4, 0]} 
+                    </CardHeader>                    <CardContent className="p-0 h-[350px]">
+                      <div className="w-full h-full overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 hover:scrollbar-thumb-gray-500">
+                        <ResponsiveContainer width="100%" height={550}><BarChart
+                            data={channelData.slice(0, 15)}
+                            margin={{ top: 5, right: 20, left: 120, bottom: 5 }}
+                            layout="vertical"
+                            barSize={16}
+                            barGap={5}
                           >
-                            {channelData.slice(0, 15).map((entry, index) => {
-                              // Create a gradient from red to blue based on rank
-                              const ratio = index / 14; // 0-14 indexes for 15 items
-                              // Interpolate between red and blue
-                              const r = Math.round(255 * (1 - ratio));
-                              const b = Math.round(255 * ratio);
-                              const color = `rgb(${r}, 82, ${b})`;
-                              return <Cell key={`cell-${index}`} fill={color} />;
-                            })}
-                          </Bar>
-                        </BarChart>
-                      </ChartContainer>
+                            <XAxis
+                              type="number"
+                              tick={{ fontSize: 9, fill: "#FFFFFF" }}
+                              stroke="#FFFFFF"
+                              tickFormatter={formatNumber}
+                              tickCount={5}
+                            />
+                            <YAxis
+                              type="category"
+                              dataKey="name"
+                              tick={{ 
+                                fontSize: 11, 
+                                fill: "#FFFFFF",
+                                width: 120,
+                                textAnchor: "end"
+                              }}
+                              stroke="#FFFFFF"
+                              width={122}
+                              interval={0}
+                              tickFormatter={(value) => {
+                                return value.length > 16 ? `${value.substring(0, 14)}...` : value;
+                              }}
+                            />
+                            <Tooltip
+                              contentStyle={tooltipContentStyle}
+                              formatter={(value) => [<span style={{ color: "#FFFFFF" }}>{value} videos</span>, null]}
+                              labelFormatter={(name, payload) => {
+                                const fullName = payload[0]?.payload?.fullName || name;
+                                return <b>{fullName}</b>;
+                              }}
+                              separator=": "
+                              wrapperStyle={{ whiteSpace: 'nowrap' }}
+                            />
+                            <Bar 
+                              dataKey="count" 
+                              name="Videos Watched" 
+                              radius={[0, 4, 4, 0]}
+                            >
+                              {channelData.slice(0, 15).map((entry, index) => {
+                                const ratio = index / 14; // 0-14 indexes for 15 items
+                                const r = Math.round(255 * (1 - ratio));
+                                const b = Math.round(255 * ratio);
+                                const color = `rgb(${r}, 82, ${b})`;
+                                return <Cell key={`cell-${index}`} fill={color} />;
+                              })}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
                     </CardContent>
                   </Card>
                 </SlideIn>
-              </TabsContent>              <TabsContent value="time">
+              </TabsContent><TabsContent value="time">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   <SlideIn from="left" delay={0.4} duration={0.5}>
                     <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                       <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                         <CardTitle className="text-xs font-medium text-white">Video Length Distribution</CardTitle>
-                      </CardHeader>                      <CardContent className="p-1 h-[280px] flex items-center justify-center">
-                        <ChartContainer minHeight={240}>
+                      </CardHeader>                      <CardContent className="p-1 h-[320px] flex items-center justify-center">
+                        <ChartContainer minHeight={280}>
                           <BarChart
                             data={videoLengthData}
                             margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
