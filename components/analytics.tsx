@@ -99,6 +99,8 @@ const tooltipContentStyle = {
   borderRadius: "6px",
   fontSize: "12px",
   color: "#FFFFFF", // White text for tooltips
+  padding: "6px 8px",
+  whiteSpace: "nowrap" // Ensure text stays on one line
 };
 
 export function Analytics() {
@@ -350,7 +352,30 @@ export function Analytics() {
                           />
                           <Tooltip
                             contentStyle={tooltipContentStyle}
-                            formatter={tooltipFormatter}
+                            formatter={(value, name) => {
+                              // Determine proper display name and color
+                              let displayName;
+                              let color;
+                              
+                              if (name === "likes") {
+                                displayName = "Likes";
+                                color = CHART_COLORS.likes;
+                              } else if (name === "playlists") {
+                                displayName = "Playlists";
+                                color = CHART_COLORS.playlists;
+                              } else if (name === "subscriptions") {
+                                displayName = "Subscriptions";
+                                color = CHART_COLORS.subscriptions;
+                              } else {
+                                displayName = name;
+                                color = CHART_COLORS.light;
+                              }
+                              
+                              return [<span style={{ color: "#FFFFFF" }}>{value}</span>, displayName];
+                            }}
+                            labelFormatter={(name) => <b>{name}</b>}
+                            separator=": "
+                            wrapperStyle={{ whiteSpace: 'nowrap' }}
                           />
                           <Legend formatter={legendFormatter} />
                           <Bar dataKey="likes" stackId="a" fill={CHART_COLORS.likes} name="likes" radius={[4, 4, 0, 0]} />
@@ -391,7 +416,6 @@ export function Analytics() {
                           <Tooltip
                             contentStyle={tooltipContentStyle}
                             formatter={(value, name) => {
-                              // Create custom tooltip content with proper colors
                               let color;
                               if (name === "Likes") {
                                 color = CHART_COLORS.likes;
@@ -402,12 +426,11 @@ export function Analytics() {
                               } else {
                                 color = CHART_COLORS.light;
                               }
-                              
-                              return [
-                                <span style={{ color: "#FFFFFF" }}>{value}</span>, 
-                                <span style={{ color }}>{name}</span>
-                              ];
+                              return [<span style={{ color: "#FFFFFF" }}>{value}</span>, <span style={{ color }}>{name}</span>];
                             }}
+                            labelFormatter={(name) => <b>{name}</b>}
+                            separator=": "
+                            wrapperStyle={{ whiteSpace: 'nowrap' }}
                           />
                           {!isLoading && <Legend 
                             formatter={(value) => {
@@ -469,7 +492,10 @@ export function Analytics() {
                           />
                           <Tooltip
                             contentStyle={tooltipContentStyle}
-                            formatter={(value) => [value, "Total Activity"]}
+                            formatter={(value) => [<span style={{ color: "#FFFFFF" }}>{value}</span>, <span style={{ color: CHART_COLORS.light }}>Total</span>]}
+                            labelFormatter={(name) => <b>{name}</b>}
+                            separator=": "
+                            wrapperStyle={{ whiteSpace: 'nowrap' }}
                           />
                           <Area 
                             type="monotone" 

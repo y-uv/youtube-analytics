@@ -172,9 +172,8 @@ export default function YouTubeHistory() {  const { data: session, status } = us
                     </p>
                   </div>
                 )}
-                
-                <div className="mt-4 text-xs text-gray-500">
-                  Channel created: {new Date(channelStats.publishedAt).toLocaleDateString()}
+                  <div className="mt-4 text-xs text-gray-500 flex items-center">
+                  <span className="inline-flex items-center">Channel created: {new Date(channelStats.publishedAt).toLocaleDateString()}</span>
                 </div>
               </CardContent>
             </Card>
@@ -250,29 +249,19 @@ export default function YouTubeHistory() {  const { data: session, status } = us
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <a 
-                          href={`https://www.youtube.com/channel/${video.channelId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-gray-600 hover:underline"
-                        >
-                          {video.channelTitle || "Unknown channel"}
-                        </a>
-                      </div>
                       <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                        <span>{formatNumber(Number(video.viewCount))} views</span>
-                        <span>•</span>
-                        <span>{formatNumber(Number(video.likeCount))} likes</span>
+                        <span className="flex items-center">{formatNumber(Number(video.viewCount))} views</span>
+                        <span className="flex items-center">•</span>
+                        <span className="flex items-center">{formatNumber(Number(video.likeCount))} likes</span>
                         {video.commentCount && video.commentCount !== "0" && (
                           <>
-                            <span>•</span>
-                            <span>{formatNumber(Number(video.commentCount))} comments</span>
+                            <span className="flex items-center">•</span>
+                            <span className="flex items-center">{formatNumber(Number(video.commentCount))} comments</span>
                           </>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500 mt-auto">
-                        Liked: {new Date(video.publishedAt).toLocaleString()}
+                      <p className="text-xs text-gray-500 mt-auto flex items-center">
+                        <span className="inline-flex items-center">Liked: {new Date(video.publishedAt).toLocaleString()}</span>
                       </p>
                     </div>
                   </div>
@@ -348,8 +337,8 @@ export default function YouTubeHistory() {  const { data: session, status } = us
                       </p>
                     )}
                   </CardContent>
-                  <CardFooter className="pt-0 text-xs text-gray-500 border-t mt-auto">
-                    Created: {new Date(playlist.publishedAt).toLocaleDateString()}
+                  <CardFooter className="pt-0 text-xs text-gray-500 border-t mt-auto flex items-center">
+                    <span className="inline-flex items-center">Created: {new Date(playlist.publishedAt).toLocaleDateString()}</span>
                   </CardFooter>
                 </Card>
               ))}
@@ -412,8 +401,8 @@ export default function YouTubeHistory() {  const { data: session, status } = us
                       >
                         {sub.title}
                       </a>
-                      <p className="text-xs text-gray-500">
-                        Subscribed: {new Date(sub.publishedAt).toLocaleDateString()}
+                      <p className="text-xs text-gray-500 flex items-center">
+                        <span className="inline-flex items-center">Subscribed: {new Date(sub.publishedAt).toLocaleDateString()}</span>
                       </p>
                     </div>
                   </div>
