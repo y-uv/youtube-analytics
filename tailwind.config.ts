@@ -68,10 +68,29 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "youtube-progress": {
+          "0%": { width: "0%", opacity: "1" },
+          "50%": { width: "70%", opacity: "0.8" },
+          "80%": { width: "92%", opacity: "0.7" },
+          "100%": { width: "100%", opacity: "0" }
+        },
+        "video-pulse": {
+          "0%": { opacity: "0.6", transform: "scale(1)" },
+          "50%": { opacity: "0.8", transform: "scale(1.02)" },
+          "100%": { opacity: "0.6", transform: "scale(1)" }
+        },
+        "half-speed": {
+          "0%": { filter: "brightness(1)" },
+          "50%": { filter: "brightness(1.1)" },
+          "100%": { filter: "brightness(1)" }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "youtube-progress": "youtube-progress 2.5s ease-out infinite",
+        "video-pulse": "video-pulse 2s ease-in-out infinite",
+        "half-speed": "half-speed 4s ease-in-out infinite",
       },
     },
   },

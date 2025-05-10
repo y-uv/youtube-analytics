@@ -17,6 +17,8 @@ export interface WatchHistoryItem {
   thumbnail?: string;
   videoOwnerChannelTitle?: string;
   videoOwnerChannelId?: string;
+  // Video duration in seconds (may not be present in standard watch history data)
+  duration?: number;
 }
 
 export interface LikedVideo {
