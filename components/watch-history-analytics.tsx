@@ -318,8 +318,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
       "while", "who", "who's", "whom", "why", "why's", "with", "won't", "would", 
       "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours", 
       "yourself", "yourselves",
-      
-      // YouTube and web-specific terms
+        // YouTube and web-specific terms
       "youtube", "www", "http", "https", "com", "net", "org", "video", "channel",
       "videos", "subscribe", "watch", "watching", "watched", "views", "view", "new",
       "official", "music", "audio", "hd", "full", "vs", "feat", "featuring", "ft",
@@ -327,7 +326,11 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
       "how", "top", "best", "worst", "latest", "update", "live", "stream", "gaming",
       "game", "play", "playing", "gameplay", "funny", "highlights", "interview",
       "vlog", "compilation", "challenge", "reaction", "reacting", "making", "create",
-      "created", "shorts", "short", "mix", "playlist", "series", "show"
+      "created", "shorts", "short", "mix", "playlist", "series", "show",
+      
+      // Additional common words to filter out
+      "like", "make", "get", "one", "free", "day", "just", "made", "dont", "got", 
+      "first", "way", "ever", "know", "next"
     ]);
     
     data.forEach(item => {
@@ -589,9 +592,8 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
           </FadeIn>        ) : isProcessing ? (
           <YouTubeLoadingOverlay/>
         ) : (
-          <>
-            {/* Analytics Dashboard Section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">              <SlideIn from="top" delay={0.1} duration={0.5}>
+          <>            {/* Analytics Dashboard Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">              <SlideIn from="top" delay={0.1} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                   <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                     <CardTitle className="text-xs font-medium text-white">Total Videos Watched</CardTitle>
@@ -932,93 +934,52 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                   <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                     <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                       <CardTitle className="text-sm font-medium text-white">Common Keywords in Video Titles</CardTitle>
-                    </CardHeader>                    <CardContent className="p-0">
+                    </CardHeader>                    <CardContent className="p-4">
                       <div className="h-[320px] relative overflow-hidden">
                         {wordCloudData.length > 0 && (
-                          <div className="bubble-container h-full w-full flex items-center justify-center">
-                            {/* Top keywords as a horizontal list */}
-                            <div className="absolute top-4 left-0 w-full px-4 flex justify-center">
-                              <div className="flex flex-wrap gap-2 justify-center max-w-[90%]">
-                                {wordCloudData.slice(0, 5).map((word, index) => {
-                                  // Use consistent green to pastel blue color scheme
-                                  const ratio = index / 4; // 0-4 indexes (5 items)
-                                  const r = Math.round(76 * (1 - ratio) + 150 * ratio);
-                                  const g = Math.round(175 * (1 - ratio) + 180 * ratio);
-                                  const b = Math.round(80 * (1 - ratio) + 210 * ratio);
-                                  const color = `rgb(${r}, ${g}, ${b})`;
-                                  
-                                  const fontSize = 1 - (index * 0.1); // 1.0, 0.9, 0.8, 0.7, 0.6
-                                  
-                                  return (
-                                    <div 
-                                      key={`top-${word.text}`}
-                                      className="px-3 py-1 rounded-full border border-white/10"
-                                      style={{
-                                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                                        color: color,
-                                        fontSize: `${fontSize}rem`,
-                                        fontWeight: index === 0 ? 'bold' : 'normal'
-                                      }}
-                                    >
-                                      {word.text}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                            
-                            {/* Main tag cloud - grid layout */}
-                            <div className="grid grid-cols-4 gap-2 p-6 mt-12 w-full max-w-[90%]">
-                              {wordCloudData.slice(5, 25).map((word, index) => {
-                                // Calculate size based on position in the array
-                                const sizeIndex = Math.floor(index / 5); // 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, etc.
-                                const fontSize = 0.75 - (sizeIndex * 0.1); // 0.75, 0.65, 0.55, 0.45
+                          <div className="text-cloud w-full h-full flex items-center justify-center">
+                            <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-2 max-w-[90%]">
+                              {wordCloudData.slice(0, 40).map((word, index) => {
+                                // Calculate font size based on word position (largest to smallest)
+                                let fontSize;
+                                if (index < 5) {
+                                  // First 5 words: from 1.8rem to 1.4rem
+                                  fontSize = 1.8 - (index * 0.08);
+                                } else if (index < 15) {
+                                  // Next 10 words: from 1.2rem to 0.95rem
+                                  fontSize = 1.2 - ((index - 5) * 0.025);
+                                } else if (index < 30) {
+                                  // Next 15 words: from 0.9rem to 0.75rem
+                                  fontSize = 0.9 - ((index - 15) * 0.01);
+                                } else {
+                                  // Remaining words: 0.7rem
+                                  fontSize = 0.7;
+                                }
                                 
-                                // Color based on position
-                                const ratio = index / 20;
+                                // Use consistent green to pastel blue color scheme
+                                const ratio = Math.min(1, index / 39); // Normalize to 0-1
                                 const r = Math.round(76 * (1 - ratio) + 150 * ratio);
                                 const g = Math.round(175 * (1 - ratio) + 180 * ratio);
                                 const b = Math.round(80 * (1 - ratio) + 210 * ratio);
                                 const color = `rgb(${r}, ${g}, ${b})`;
                                 
-                                const opacity = 1 - (sizeIndex * 0.15); // 1, 0.85, 0.7, 0.55
-                                
                                 return (
-                                  <div 
-                                    key={`grid-${word.text}`}
-                                    className="flex items-center justify-center text-center rounded-md py-1 border border-white/5"
+                                  <span 
+                                    key={word.text}
+                                    className="inline-block px-1 py-0.5"
                                     style={{
-                                      backgroundColor: `rgba(76, 175, 80, ${0.15 * opacity})`,
-                                      color: color,
                                       fontSize: `${fontSize}rem`,
-                                      overflow: 'hidden',
-                                      wordBreak: 'break-word',
-                                      padding: '4px',
-                                      minHeight: '28px'
+                                      color: color,
+                                      fontWeight: index < 3 ? 'bold' : 'normal',
+                                      opacity: index < 20 ? 1 : (1 - ((index - 20) * 0.015)),
+                                      transition: 'all 0.2s ease',
+                                      cursor: 'default'
                                     }}
                                   >
                                     {word.text}
-                                  </div>
+                                  </span>
                                 );
                               })}
-                            </div>
-                            
-                            {/* Bottom horizontal list */}
-                            <div className="absolute bottom-4 left-0 w-full px-4">
-                              <div className="flex flex-wrap gap-1 justify-center text-xs text-opacity-70 max-w-[90%] mx-auto">
-                                {wordCloudData.slice(25, 35).map((word, index) => {
-                                  const ratio = index / 10;
-                                  const r = Math.round(76 * (1 - ratio) + 150 * ratio);
-                                  const g = Math.round(175 * (1 - ratio) + 180 * ratio);
-                                  const b = Math.round(80 * (1 - ratio) + 210 * ratio);
-                                  
-                                  return (
-                                    <span key={`bottom-${word.text}`} style={{ color: `rgb(${r}, ${g}, ${b})` }} className="mr-2">
-                                      {word.text}
-                                    </span>
-                                  );
-                                })}
-                              </div>
                             </div>
                           </div>
                         )}
