@@ -180,9 +180,17 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
       };
       
       reader.readAsText(file);
-    }  }, []);
-  // Generate video length distribution data
+    }  }, []);  // Generate video length distribution data
   const generateVideoLengthData = (data: WatchHistoryItem[]) => {
+    // Type definition for our chart data
+    interface VideoLengthItem {
+      name: string;
+      min: number;
+      max: number;
+      count: number;
+      value: number; // Required for recharts compatibility
+    }
+
     // Define video length categories in seconds
     const categories = [
       { name: "Under 1 min", min: 0, max: 60 },
@@ -197,7 +205,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
     const minCount = data.length > 0 ? 1 : 0;
     
     // Initialize counts for each category with realistic distribution
-    const lengthData = categories.map((cat, index) => {
+    const lengthData: VideoLengthItem[] = categories.map((cat, index) => {
       // Create a more realistic distribution for demo purposes
       // Short videos are most common on YouTube
       let baseCount = minCount; // Ensure every category has at least 1 if we have data
@@ -231,10 +239,23 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
       const midpoint = (category.min + Math.min(category.max, 7200)) / 2;
       totalDuration += midpoint * category.count;
     });
-    
+
     // Calculate average video length
     const avgLength = data.length > 0 ? totalDuration / data.length : 0;
     setAverageVideoLength(avgLength);
+    
+    // Calculate total count to ensure pie chart percentages are accurate
+    const totalCount = lengthData.reduce((sum, item) => sum + item.count, 0);
+    
+    // Make sure we have some data for the pie chart to prevent rendering issues
+    if (totalCount === 0 && lengthData.length > 0) {
+      // If we have no data but categories exist, give each category a minimal value
+      lengthData.forEach(item => {
+        item.count = 1;
+        item.value = 1;
+      });
+      console.log("No video data found, using placeholder values");
+    }
     
     // Log to help debug
     console.log("Generated video length data:", lengthData);
@@ -804,46 +825,62 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                     <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                       <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                         <CardTitle className="text-xs font-medium text-white">Video Length Breakdown</CardTitle>
-                      </CardHeader>                     
-                      <CardContent className="p-1 h-[320px] flex items-center justify-center">
+                      </CardHeader>                       <CardContent className="p-1 h-[320px] flex items-center justify-center">
                         <ChartContainer minHeight={280}>
-                          <div className="relative flex justify-center items-center w-full">
-                            <ResponsiveContainer width="100%" height={280}>
-                              <PieChart>
-                                <Pie
-                                  data={videoLengthData}
-                                  cx="50%"
-                                  cy="50%"
-                                  labelLine={false}
-                                  outerRadius={80}
-                                  innerRadius={30}
-                                  fill="#8884d8"
-                                  dataKey="count"
-                                  nameKey="name"
-                                  paddingAngle={1}
-                                  label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                                >
-                                  {videoLengthData.map((entry, index) => {
-                                    // Generate a gradient from green to blue
-                                    const ratio = index / (videoLengthData.length - 1);
-                                    const r = Math.round(76 * (1 - ratio));
-                                    const g = Math.round(175 * (1 - ratio) + 33 * ratio);
-                                    const b = Math.round(80 * (1 - ratio) + 243 * ratio);
-                                    const color = `rgb(${r}, ${g}, ${b})`;
-                                    return <Cell key={`cell-${index}`} fill={color} />;
-                                  })}
-                                </Pie>
-                                <Tooltip 
-                                  formatter={(value) => [`${value} videos`]}
-                                  contentStyle={tooltipContentStyle}
-                                />
-                              </PieChart>
-                            </ResponsiveContainer>
-                          </div>
-                          <div className="flex flex-wrap justify-center mt-4 gap-3">
+                          <div className="flex flex-col w-full h-full">
+                            {/* Pie Chart Container */}
+                            <div className="flex-1 flex items-center justify-center">                              {videoLengthData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={220}>
+                                  <PieChart>
+                                    <Pie
+                                      data={videoLengthData.map((item) => ({
+                                        name: item.name,
+                                        value: item.count || item.value || 0 // Fallback for any data structure
+                                      }))}
+                                      cx="50%"
+                                      cy="50%"
+                                      labelLine={false}
+                                      outerRadius={80}
+                                      innerRadius={30}
+                                      paddingAngle={2}
+                                      dataKey="value"
+                                      nameKey="name"
+                                      label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                                    >
+                                      {videoLengthData.map((_, index) => {
+                                        // Generate a gradient from green to blue with safe division
+                                        const divisor = Math.max(1, videoLengthData.length - 1);
+                                        const ratio = index / divisor;
+                                        const r = Math.round(76 * (1 - ratio));
+                                        const g = Math.round(175 * (1 - ratio) + 33 * ratio);
+                                        const b = Math.round(80 * (1 - ratio) + 243 * ratio);
+                                        const color = `rgb(${r}, ${g}, ${b})`;
+                                        return <Cell key={`cell-${index}`} fill={color} />;
+                                      })}
+                                    </Pie>
+                                    <Tooltip 
+                                      formatter={(value: number, name: string) => [`${value} videos`, name]} 
+                                      contentStyle={{
+                                        ...tooltipContentStyle,
+                                        backgroundColor: "rgba(57, 62, 70, 0.95)",
+                                        border: "1px solid rgba(148, 137, 121, 0.6)",
+                                        padding: "8px",
+                                        borderRadius: "6px"
+                                      }}
+                                    />
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              ) : (
+                                <div className="flex items-center justify-center text-muted-foreground">
+                                  No data available
+                                </div>
+                              )}                            </div>
+                            {/* Legend Container */}
+                            <div className="flex flex-wrap justify-center mt-2 gap-3">
                             {videoLengthData.map((item, index) => {
                               // Generate a gradient from green to blue (same as in the chart)
-                              const ratio = index / (videoLengthData.length - 1);
+                              const divisor = Math.max(1, videoLengthData.length - 1);
+                              const ratio = index / divisor;
                               const r = Math.round(76 * (1 - ratio));
                               const g = Math.round(175 * (1 - ratio) + 33 * ratio);
                               const b = Math.round(80 * (1 - ratio) + 243 * ratio);
@@ -855,6 +892,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                                 </div>
                               );
                             })}
+                            </div>
                           </div>
                         </ChartContainer>
                       </CardContent>
