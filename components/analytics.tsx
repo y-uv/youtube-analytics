@@ -47,8 +47,6 @@ const tooltipFormatter = (value: number, name: string) => {
     ? "Playlists" 
     : name === "subscriptions"
     ? "Subscriptions"
-    : name === "watchHistory"
-    ? "Watched Videos"
     : name;
   return [value, formattedName];
 };
@@ -60,8 +58,6 @@ const legendFormatter = (value: string) => {
     ? "Playlists" 
     : value === "subscriptions"
     ? "Subscriptions"
-    : value === "watchHistory"
-    ? "Watched Videos"
     : value;
 
   // Apply color based on the value
@@ -71,20 +67,17 @@ const legendFormatter = (value: string) => {
     ? CHART_COLORS.playlists 
     : value === "subscriptions"
     ? CHART_COLORS.subscriptions
-    : value === "watchHistory"
-    ? CHART_COLORS.watchHistory 
     : "#DFD0B8"; // Default to light beige
 
   return <span className="text-xs" style={{ color }}>{formattedValue}</span>;
 };
 
-// Define constant colors with our new color scheme
+// Define constant colors with our new color scheme - matching watch-history-analytics.tsx
 const CHART_COLORS = {
-  likes: "#FF5252",     // Red for likes
-  playlists: "#4CAF50", // Green for playlists
-  subscriptions: "#2196F3", // Blue for subscriptions
-  watchHistory: "#FFD700", // Yellow for watch history
-  total: "#FFFFFF",     // White for total
+  likes: "#FF5252",     // Red for likes (matching secondary in watch-history)
+  playlists: "#4CAF50", // Green for playlists (matching tertiary in watch-history)
+  subscriptions: "#2196F3", // Blue for subscriptions (matching quaternary in watch-history)
+  total: "#FFFFFF",     // White for total activity
   background: "#222831", // Dark background
   cardBg: "#393E46",    // Dark gray for cards
   accent: "#948979",    // Taupe accent
@@ -93,9 +86,8 @@ const CHART_COLORS = {
   0: "#FF5252",     // Red
   1: "#4CAF50",     // Green
   2: "#2196F3",     // Blue
-  3: "#FFD700",     // Yellow
-  4: "#FFFFFF",     // White
-  length: 5         // Length property for array-like behavior
+  3: "#FFFFFF",     // White
+  length: 4         // Length property for array-like behavior
 };
 
 // Define constant styles outside component
@@ -112,10 +104,7 @@ export function Analytics() {
   const { data: session, status } = useSession()
   const { theme, setTheme } = useTheme()
   const [activePage, setActivePage] = useState("dashboard")
-  const [fileUploaded, setFileUploaded] = useState(false)
   const [dragActive, setDragActive] = useState(false)
-  const [watchHistory, setWatchHistory] = useState<WatchHistoryItem[]>([])
-  const [totalWatched, setTotalWatched] = useState(0)
   
   // Use the combined YouTube data hook
   const { 
@@ -152,98 +141,17 @@ export function Analytics() {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
       
-      // Check if this is likely a watch history file
-      if (file.name.toLowerCase().includes('watch-history') || 
-          file.name.toLowerCase().includes('youtube') || 
-          file.size > 1000000) { // If it's a large JSON file, assume watch history
-        
-        // Store the file in sessionStorage temporarily
-        const reader = new FileReader();
-        reader.onload = () => {
-          try {
-            // Store the file path in sessionStorage for the watch history page to use
-            sessionStorage.setItem('pendingWatchHistoryUpload', 'true');
-            
-            // Navigate to the watch history page
-            window.location.href = '/watch-history';
-          } catch (error) {
-            console.error("Error preparing watch history redirect:", error);
-          }
-        };
-        reader.readAsText(file);
-      } else {
-        // Handle as regular file for the main dashboard
-        const reader = new FileReader();
-        
-        reader.onload = (event) => {
-          try {
-            if (event.target?.result) {
-              const jsonData = JSON.parse(event.target.result as string);
-              
-              if (Array.isArray(jsonData)) {
-                // Filter out entries without titles (they're not useful for analysis)
-                const validEntries = jsonData.filter(entry => entry.title && entry.time);
-                setWatchHistory(validEntries);
-                setTotalWatched(validEntries.length);
-                setFileUploaded(true);
-                
-                // Re-generate analytics with the new watch history data
-                updateAnalyticsWithWatchHistory(validEntries);
-              } else {
-                console.error("Invalid watch history data: not an array");
-              }
-            }
-          } catch (error) {
-            console.error("Error parsing watch history JSON:", error);
-          }
-        };
-        
-        reader.readAsText(file);
-      }
+      // For any files dropped, redirect to the watch history page
+      // This simplifies the logic since we're focusing watch history analysis there
+      window.location.href = '/watch-history';
     }
   }, []);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      
-      // Check if this is likely a watch history file (large file or specific name)
-      if (file.name.toLowerCase().includes('watch-history') || 
-          file.name.toLowerCase().includes('youtube') || 
-          file.size > 1000000) { // If it's a large JSON file, assume watch history
-        
-        // Navigate to watch history page
-        window.location.href = '/watch-history';
-        return;
-      }
-      
-      // Handle as normal file for the main dashboard
-      const reader = new FileReader();
-      
-      reader.onload = (event) => {
-        try {
-          if (event.target?.result) {
-            const jsonData = JSON.parse(event.target.result as string);
-            
-            if (Array.isArray(jsonData)) {
-              // Filter out entries without titles (they're not useful for analysis)
-              const validEntries = jsonData.filter(entry => entry.title && entry.time);
-              setWatchHistory(validEntries);
-              setTotalWatched(validEntries.length);
-              setFileUploaded(true);
-              
-              // Re-generate analytics with the new watch history data
-              updateAnalyticsWithWatchHistory(validEntries);
-            } else {
-              console.error("Invalid watch history data: not an array");
-            }
-          }
-        } catch (error) {
-          console.error("Error parsing watch history JSON:", error);
-        }
-      };
-      
-      reader.readAsText(file);
+      // For any files selected, redirect to the watch history page
+      // This simplifies the logic since we're focusing watch history analysis there
+      window.location.href = '/watch-history';
     }
   }, []);
 
@@ -251,24 +159,7 @@ export function Analytics() {
     setActivePage(prev => prev === "dashboard" ? "settings" : "dashboard")
   }, []);
 
-  // Function to update analytics with watch history data
-  const updateAnalyticsWithWatchHistory = useCallback((watchHistoryData: WatchHistoryItem[]) => {
-    if (!isLoading && !isError) {
-      try {
-        // Generate updated analytics data that includes watch history
-        const monthlyData = generateMonthlyActivityData(likedVideos, playlists, subscriptions, watchHistoryData);
-        const breakdownData = generateActivityBreakdownData(likedVideos, playlists, subscriptions, watchHistoryData);
-        
-        // Update the state with new data
-        setMonthlyActivityData(monthlyData);
-        setActivityBreakdownData(breakdownData);
-      } catch (err) {
-        console.error("Error updating analytics with watch history:", err);
-      }
-    }
-  }, [likedVideos, playlists, subscriptions, isLoading, isError]);
-
-  // Process data whenever the source data changes - using a stable dependency array
+  // Create a stable dependency array for the effect
   const dataSourceArray = useMemo(() => [
     likedVideos.length, 
     playlists.length, 
@@ -277,6 +168,7 @@ export function Analytics() {
     isError
   ], [likedVideos, playlists, subscriptions, isLoading, isError]);
 
+  // Process data whenever the source data changes
   useEffect(() => {
     // Only process data when we have data and we're not loading or in error state
     if (!isLoading && !isError) {
@@ -417,7 +309,7 @@ export function Analytics() {
               </FadeIn>
             )}
 
-            {!fileUploaded && !isLoading && !isError && (
+            {!isLoading && !isError && (
               <FadeIn delay={0.2} duration={0.5}>
                 <div className="flex justify-center">
                   <Button 
@@ -427,7 +319,7 @@ export function Analytics() {
                     onClick={() => window.location.href = '/watch-history'}
                   >
                     <BarChart3 className="h-4 w-4 mr-1.5" />
-                    Advanced Analytics
+                    Watch History Analytics
                   </Button>
                 </div>
               </FadeIn>
@@ -472,8 +364,7 @@ export function Analytics() {
                           <Legend formatter={legendFormatter} />
                           <Bar dataKey="likes" stackId="a" fill={CHART_COLORS.likes} name="likes" radius={[4, 4, 0, 0]} />
                           <Bar dataKey="playlists" stackId="a" fill={CHART_COLORS.playlists} name="playlists" radius={[0, 0, 0, 0]} />
-                          <Bar dataKey="subscriptions" stackId="a" fill={CHART_COLORS.subscriptions} name="subscriptions" radius={[0, 0, 0, 0]} />
-                          <Bar dataKey="watchHistory" stackId="a" fill={CHART_COLORS.watchHistory} name="watchHistory" radius={[0, 0, 4, 4]} />
+                          <Bar dataKey="subscriptions" stackId="a" fill={CHART_COLORS.subscriptions} name="subscriptions" radius={[0, 0, 4, 4]} />
                         </BarChart>
                       </ChartContainer>
                     )}
@@ -517,8 +408,6 @@ export function Analytics() {
                                 color = CHART_COLORS.playlists;
                               } else if (name === "Subscriptions") {
                                 color = CHART_COLORS.subscriptions;
-                              } else if (name === "Watched Videos") {
-                                color = CHART_COLORS.watchHistory;
                               } else {
                                 color = CHART_COLORS.light;
                               }
@@ -539,8 +428,6 @@ export function Analytics() {
                                 textColor = CHART_COLORS.playlists;
                               } else if (value === "Subscriptions") {
                                 textColor = CHART_COLORS.subscriptions;
-                              } else if (value === "Watch History") {
-                                textColor = CHART_COLORS.watchHistory;
                               } else {
                                 textColor = CHART_COLORS.light;
                               }
@@ -618,7 +505,7 @@ export function Analytics() {
                     </Button>
                   </CardHeader>
                   <CardContent className="flex items-center justify-center h-[calc(100%-2.75rem)]">
-                    <div className="grid grid-cols-4 gap-4 w-full px-4">
+                    <div className="grid grid-cols-3 gap-4 w-full px-4">
                       <div className="text-center">
                         <div className="text-2xl font-bold" style={{ color: CHART_COLORS.likes }}>{formatNumber(totalLikes)}</div>
                         <p className="text-xs mt-1" style={{ color: CHART_COLORS.likes }}>Liked Videos</p>
@@ -630,10 +517,6 @@ export function Analytics() {
                       <div className="text-center">
                         <div className="text-2xl font-bold" style={{ color: CHART_COLORS.subscriptions }}>{formatNumber(totalSubscriptions)}</div>
                         <p className="text-xs mt-1" style={{ color: CHART_COLORS.subscriptions }}>Subscriptions</p>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold" style={{ color: CHART_COLORS.watchHistory }}>{formatNumber(totalWatched)}</div>
-                        <p className="text-xs mt-1" style={{ color: CHART_COLORS.watchHistory }}>Watched Videos</p>
                       </div>
                     </div>
                   </CardContent>
