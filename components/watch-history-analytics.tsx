@@ -728,16 +728,23 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                               labelFormatter={(name) => <b>{name}</b>}
                               separator=": "
                               wrapperStyle={{ whiteSpace: 'nowrap' }}
-                            />
-                            <Bar 
+                            />                            <Bar 
                               dataKey="count" 
                               name="Videos Watched" 
                               radius={[4, 4, 0, 0]}
                             >
                               {hourlyWatchData.map((entry, index) => {
-                                // Create color gradients based on time of day
-                                const color = getHourColor(entry.hour);
-                                return <Cell key={`cell-${index}`} fill={color} />;
+                                // Find max count to normalize values
+                                const maxCount = Math.max(...hourlyWatchData.map(h => h.count || 0), 1);
+                                // Higher counts are green, lower counts are pastel blue
+                                const ratio = (entry.count || 0) / maxCount;
+                                
+                                // Use the same green to pastel blue gradient as other charts
+                                const r = Math.round(76 * ratio + 150 * (1 - ratio));
+                                const g = Math.round(175 * ratio + 180 * (1 - ratio));
+                                const b = Math.round(80 * ratio + 210 * (1 - ratio));
+                                
+                                return <Cell key={`cell-${index}`} fill={`rgb(${r}, ${g}, ${b})`} />;
                               })}
                             </Bar>
                           </BarChart>
