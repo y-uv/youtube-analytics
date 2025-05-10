@@ -652,10 +652,9 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
               </TabsList>              <TabsContent value="overview">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   <SlideIn from="top" delay={0.4} duration={0.5}>
-                    <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
-                      <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
+                    <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">                      <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                         <CardTitle className="text-xs font-medium text-white">Monthly Watch Activity</CardTitle>
-                      </CardHeader>                      <CardContent className="p-1 h-[280px] flex items-center justify-center">                        <ChartContainer minHeight={240}>
+                      </CardHeader>                      <CardContent className="p-1 h-[350px] flex items-center justify-center">                        <ChartContainer minHeight={320}>
                           <AreaChart
                             data={monthlyWatchData}
                             margin={{ top: 20, right: 30, left: 10, bottom: 30 }}
@@ -698,10 +697,9 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                       </CardContent>
                     </Card>
                   </SlideIn>                  <SlideIn from="top" delay={0.4} duration={0.5}>
-                    <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
-                      <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
+                    <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">                      <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                         <CardTitle className="text-xs font-medium text-white">Watching Time Distribution</CardTitle>
-                      </CardHeader>                      <CardContent className="p-1 h-[280px] flex items-center justify-center">                        <ChartContainer minHeight={240}>
+                      </CardHeader>                      <CardContent className="p-1 h-[350px] flex items-center justify-center">                        <ChartContainer minHeight={320}>
                           <BarChart
                             data={hourlyWatchData}
                             margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
@@ -817,11 +815,10 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
               </TabsContent><TabsContent value="time">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   <SlideIn from="top" delay={0.4} duration={0.5}>
-                    <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
-                      <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
+                    <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">                      <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                         <CardTitle className="text-xs font-medium text-white">Video Length Distribution</CardTitle>
-                      </CardHeader>                      <CardContent className="p-1 h-[320px] flex items-center justify-center">
-                        <ChartContainer minHeight={280}>
+                      </CardHeader>                      <CardContent className="p-1 h-[350px] flex items-center justify-center">
+                        <ChartContainer minHeight={320}>
                           <BarChart
                             data={videoLengthData}
                             margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
@@ -860,15 +857,13 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                       </CardContent>
                     </Card>
                   </SlideIn>                  <SlideIn from="top" delay={0.4} duration={0.5}>
-                    <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
-                      <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
+                    <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">                      <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                         <CardTitle className="text-xs font-medium text-white">Video Length Breakdown</CardTitle>
-                      </CardHeader>                       <CardContent className="p-1 h-[320px] flex items-center justify-center">
-                        <ChartContainer minHeight={280}>
+                      </CardHeader>                       <CardContent className="p-1 h-[350px] flex items-center justify-center">
+                        <ChartContainer minHeight={320}>
                           <div className="flex flex-col w-full h-full">
-                            {/* Pie Chart Container */}
-                            <div className="flex-1 flex items-center justify-center">                              {videoLengthData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={220}>
+                            {/* Pie Chart Container */}                            <div className="flex-1 flex items-center justify-center">                              {videoLengthData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={250}>
                                   <PieChart>
                                     <Pie
                                       data={videoLengthData.map((item) => ({
@@ -933,12 +928,12 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
               </TabsContent>              <TabsContent value="keywords">                <SlideIn from="top" delay={0.4} duration={0.5}>
                   <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                     <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
-                      <CardTitle className="text-sm font-medium text-white">Common Keywords in Video Titles</CardTitle>
-                    </CardHeader>                    <CardContent className="p-4">
-                      <div className="h-[320px] relative overflow-hidden">
-                        {wordCloudData.length > 0 && (
-                          <div className="text-cloud w-full h-full flex items-center justify-center">
-                            <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-2 max-w-[90%]">
+                      <CardTitle className="text-xs font-medium text-white">Common Keywords in Video Titles</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-1 h-[350px] flex items-center justify-center">
+                      <ChartContainer minHeight={320}>
+                        <div className="text-cloud w-full h-full flex items-center justify-center">
+                          <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-2 max-w-[90%]">
                               {wordCloudData.slice(0, 40).map((word, index) => {
                                 // Calculate font size based on word position (largest to smallest)
                                 let fontSize;
@@ -975,15 +970,13 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                                       transition: 'all 0.2s ease',
                                       cursor: 'default'
                                     }}
-                                  >
-                                    {word.text}
+                                  >                                    {word.text}
                                   </span>
                                 );
                               })}
                             </div>
                           </div>
-                        )}
-                      </div>
+                      </ChartContainer>
                     </CardContent>
                   </Card>
                 </SlideIn>
