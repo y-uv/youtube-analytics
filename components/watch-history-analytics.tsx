@@ -658,16 +658,15 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                     <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                       <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                         <CardTitle className="text-xs font-medium text-white">Monthly Watch Activity</CardTitle>
-                      </CardHeader>                      <CardContent className="p-1 h-[280px] flex items-center justify-center">
-                        <ChartContainer minHeight={240}>
+                      </CardHeader>                      <CardContent className="p-1 h-[280px] flex items-center justify-center">                        <ChartContainer minHeight={240}>
                           <AreaChart
                             data={monthlyWatchData}
                             margin={{ top: 20, right: 30, left: 10, bottom: 30 }}
                           >
                             <defs>
                               <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.8} />
-                                <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0} />
+                                <stop offset="5%" stopColor="rgb(76, 175, 80)" stopOpacity={0.8} />
+                                <stop offset="95%" stopColor="rgb(150, 180, 210)" stopOpacity={0} />
                               </linearGradient>
                             </defs>
                             <XAxis
@@ -682,7 +681,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                               tick={{ fontSize: 9, fill: "#FFFFFF" }}
                               stroke="#FFFFFF"
                               tickFormatter={formatNumber}
-                            />                            <Tooltip
+                            /><Tooltip
                               contentStyle={tooltipContentStyle}
                               formatter={(value) => [<span style={{ color: "#FFFFFF" }}>{value} videos</span>, null]}
                               labelFormatter={(name) => <b>{name}</b>}
@@ -798,12 +797,12 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                               dataKey="count" 
                               name="Videos Watched" 
                               radius={[0, 4, 4, 0]}
-                            >
-                              {channelData.slice(0, 15).map((entry, index) => {
+                            >                              {channelData.slice(0, 15).map((entry, index) => {
                                 const ratio = index / 14; // 0-14 indexes for 15 items
-                                const r = Math.round(255 * (1 - ratio));
-                                const b = Math.round(255 * ratio);
-                                const color = `rgb(${r}, 82, ${b})`;
+                                const r = Math.round(76 * (1 - ratio) + 150 * ratio);      // Increase red for pastel
+                                const g = Math.round(175 * (1 - ratio) + 180 * ratio);     // Higher green for pastel
+                                const b = Math.round(80 * (1 - ratio) + 210 * ratio);      // Slightly lower blue
+                                const color = `rgb(${r}, ${g}, ${b})`;
                                 return <Cell key={`cell-${index}`} fill={color} />;
                               })}
                             </Bar>
@@ -846,12 +845,11 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                               name="Videos"
                               radius={[4, 4, 0, 0]}
                             >
-                              {videoLengthData.map((_, index) => {
-                                // Generate a gradient from green to blue
+                              {videoLengthData.map((_, index) => {                                // Generate a gradient from green to pastel blue
                                 const ratio = index / (videoLengthData.length - 1);
-                                const r = Math.round(76 * (1 - ratio));
-                                const g = Math.round(175 * (1 - ratio) + 33 * ratio);
-                                const b = Math.round(80 * (1 - ratio) + 243 * ratio);
+                                const r = Math.round(76 * (1 - ratio) + 150 * ratio);      // Increase red for pastel
+                                const g = Math.round(175 * (1 - ratio) + 180 * ratio);     // Higher green for pastel
+                                const b = Math.round(80 * (1 - ratio) + 210 * ratio);      // Slightly lower blue
                                 return <Cell key={`cell-${index}`} fill={`rgb(${r}, ${g}, ${b})`} />;
                               })}
                             </Bar>
@@ -885,28 +883,20 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                                       nameKey="name"
                                       label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                                     >
-                                      {videoLengthData.map((_, index) => {
-                                        // Generate a gradient from green to blue with safe division
+                                      {videoLengthData.map((_, index) => {                                        // Generate a gradient from green to pastel blue with safe division
                                         const divisor = Math.max(1, videoLengthData.length - 1);
                                         const ratio = index / divisor;
-                                        const r = Math.round(76 * (1 - ratio));
-                                        const g = Math.round(175 * (1 - ratio) + 33 * ratio);
-                                        const b = Math.round(80 * (1 - ratio) + 243 * ratio);
+                                        const r = Math.round(76 * (1 - ratio) + 150 * ratio);      // Increase red for pastel
+                                        const g = Math.round(175 * (1 - ratio) + 180 * ratio);     // Higher green for pastel
+                                        const b = Math.round(80 * (1 - ratio) + 210 * ratio);      // Slightly lower blue
                                         const color = `rgb(${r}, ${g}, ${b})`;
                                         return <Cell key={`cell-${index}`} fill={color} />;
-                                      })}
-                                    </Pie>                                    <Tooltip 
-                                      formatter={(value: number) => [<span style={{ color: "#FFFFFF" }}>{value} videos</span>, null]}
+                                      })}                                    </Pie>                                    <Tooltip 
+                                      contentStyle={tooltipContentStyle}
+                                      formatter={(value) => [<span style={{ color: "#FFFFFF" }}>{value} videos</span>, null]}
                                       labelFormatter={(name) => <b>{name}</b>}
                                       separator=": "
                                       wrapperStyle={{ whiteSpace: 'nowrap' }}
-                                      contentStyle={{
-                                        ...tooltipContentStyle,
-                                        backgroundColor: "rgba(57, 62, 70, 0.95)",
-                                        border: "1px solid rgba(148, 137, 121, 0.6)",
-                                        padding: "8px",
-                                        borderRadius: "6px"
-                                      }}
                                     />
                                   </PieChart>
                                 </ResponsiveContainer>
@@ -917,13 +907,12 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                               )}                            </div>
                             {/* Legend Container */}
                             <div className="flex flex-wrap justify-center mt-2 gap-3">
-                            {videoLengthData.map((item, index) => {
-                              // Generate a gradient from green to blue (same as in the chart)
+                            {videoLengthData.map((item, index) => {                              // Generate a gradient from green to pastel blue (same as in the chart)
                               const divisor = Math.max(1, videoLengthData.length - 1);
                               const ratio = index / divisor;
-                              const r = Math.round(76 * (1 - ratio));
-                              const g = Math.round(175 * (1 - ratio) + 33 * ratio);
-                              const b = Math.round(80 * (1 - ratio) + 243 * ratio);
+                              const r = Math.round(76 * (1 - ratio) + 150 * ratio);      // Increase red for pastel
+                              const g = Math.round(175 * (1 - ratio) + 180 * ratio);     // Higher green for pastel
+                              const b = Math.round(80 * (1 - ratio) + 210 * ratio);      // Slightly lower blue
                               const color = `rgb(${r}, ${g}, ${b})`;
                               return (
                                 <div key={item.name} className="flex items-center gap-1">
@@ -952,18 +941,15 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                         {wordCloudData.slice(0, 50).map((word, index) => (
                           <span 
                             key={word.text} 
-                            className="inline-block px-2 py-1 rounded" 
-                            style={{                              fontSize: `${Math.max(0.8, Math.min(3, 0.8 + (word.value / wordCloudData[0].value) * 2))}rem`,
-                              color: (() => {                                // Create a brighter gradient based on word frequency with more white tinting
-                                // More common words are bright red, less common are bright blue
-                                const ratio = 1 - Math.min(1, index / Math.min(30, wordCloudData.length));
-                                // Add white tinting by increasing the base values
-                                const r = Math.round(255 * ratio + 100 * (1 - ratio));
-                                const g = Math.round(100 + 155 * (1 - ratio));
-                                const b = Math.round(100 * ratio + 255 * (1 - ratio));
-                                return `rgb(${Math.min(255, r)}, ${Math.min(255, g)}, ${Math.min(255, b)})`;
+                            className="inline-block px-2 py-1 rounded"                            style={{                              fontSize: `${Math.max(0.8, Math.min(3, 0.8 + (word.value / wordCloudData[0].value) * 2))}rem`,                              color: (() => {                                // Use pastel blue to green gradient (flipped from other charts)
+                                const ratio = Math.min(1, index / Math.min(30, wordCloudData.length)); // Flipped ratio
+                                // Apply inverted color palette with pastel blue for more common words
+                                const r = Math.round(76 * (1 - ratio) + 150 * ratio);      // Increase red for pastel
+                                const g = Math.round(175 * (1 - ratio) + 180 * ratio);     // Higher green for pastel
+                                const b = Math.round(80 * (1 - ratio) + 210 * ratio);      // Slightly lower blue
+                                return `rgb(${r}, ${g}, ${b})`;
                               })(),
-                              opacity: 0.8 + (word.value / wordCloudData[0].value) * 0.2,
+                              opacity: 0.9 + (word.value / wordCloudData[0].value) * 0.1,
                             }}
                           >
                             {word.text}
