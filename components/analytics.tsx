@@ -434,7 +434,7 @@ export function Analytics() {
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 grid-rows-2 gap-4 h-full">
-              <SlideIn from="left" delay={0.3} duration={0.5}>
+              <SlideIn from="top" delay={0.3} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg h-full">
                   <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
                     <CardTitle className="text-sm font-medium text-white">Monthly YouTube Activity</CardTitle>
@@ -481,7 +481,7 @@ export function Analytics() {
                 </Card>
               </SlideIn>
 
-              <SlideIn from="right" delay={0.4} duration={0.5}>
+              <SlideIn from="top" delay={0.4} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg h-full">
                   <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
                     <CardTitle className="text-sm font-medium text-white">Activity Breakdown</CardTitle>
@@ -554,7 +554,7 @@ export function Analytics() {
                 </Card>
               </SlideIn>
 
-              <SlideIn from="left" delay={0.5} duration={0.5}>
+              <SlideIn from="top" delay={0.5} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg h-full">
                   <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
                     <CardTitle className="text-sm font-medium text-white">Activity Trends</CardTitle>
@@ -608,7 +608,7 @@ export function Analytics() {
                 </Card>
               </SlideIn>
 
-              <SlideIn from="right" delay={0.6} duration={0.5}>
+              <SlideIn from="top" delay={0.6} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg h-full">
                   <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
                     <CardTitle className="text-sm font-medium text-white">Quick Stats</CardTitle>

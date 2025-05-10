@@ -591,8 +591,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
         ) : (
           <>
             {/* Analytics Dashboard Section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-              <SlideIn from="left" delay={0.1} duration={0.5}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">              <SlideIn from="top" delay={0.1} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                   <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                     <CardTitle className="text-xs font-medium text-white">Total Videos Watched</CardTitle>
@@ -608,8 +607,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                   </CardContent>
                 </Card>
               </SlideIn>
-              
-              <SlideIn from="left" delay={0.2} duration={0.5}>
+                <SlideIn from="top" delay={0.2} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                   <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                     <CardTitle className="text-xs font-medium text-white">Average Daily Watching</CardTitle>
@@ -624,8 +622,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                     </div>
                   </CardContent>
                 </Card>
-              </SlideIn>
-                <SlideIn from="left" delay={0.3} duration={0.5}>
+              </SlideIn>                <SlideIn from="top" delay={0.3} duration={0.5}>
                 <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                   <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                     <CardTitle className="text-xs font-medium text-white">Average Video Length</CardTitle>
@@ -650,11 +647,9 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                 <TabsTrigger value="channels" className="text-xs">Top Channels</TabsTrigger>
                 <TabsTrigger value="time" className="text-xs">Video Length</TabsTrigger>
                 <TabsTrigger value="keywords" className="text-xs">Keywords</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="overview">
+              </TabsList>              <TabsContent value="overview">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                  <SlideIn from="left" delay={0.4} duration={0.5}>
+                  <SlideIn from="top" delay={0.4} duration={0.5}>
                     <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                       <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                         <CardTitle className="text-xs font-medium text-white">Monthly Watch Activity</CardTitle>
@@ -700,9 +695,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                         </ChartContainer>
                       </CardContent>
                     </Card>
-                  </SlideIn>
-
-                  <SlideIn from="right" delay={0.4} duration={0.5}>
+                  </SlideIn>                  <SlideIn from="top" delay={0.4} duration={0.5}>
                     <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                       <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                         <CardTitle className="text-xs font-medium text-white">Watching Time Distribution</CardTitle>
@@ -754,7 +747,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                   </SlideIn>
                 </div>
               </TabsContent>              <TabsContent value="channels">
-                <SlideIn from="left" delay={0.4} duration={0.5}>
+                <SlideIn from="top" delay={0.4} duration={0.5}>
                   <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                     <CardHeader className="py-1 px-3 flex flex-row justify-between items-center">
                       <CardTitle className="text-xs font-medium text-white">Top 15 Channels</CardTitle>
@@ -821,7 +814,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                 </SlideIn>
               </TabsContent><TabsContent value="time">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                  <SlideIn from="left" delay={0.4} duration={0.5}>
+                  <SlideIn from="top" delay={0.4} duration={0.5}>
                     <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                       <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                         <CardTitle className="text-xs font-medium text-white">Video Length Distribution</CardTitle>
@@ -864,7 +857,7 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                         </ChartContainer>
                       </CardContent>
                     </Card>
-                  </SlideIn>                  <SlideIn from="right" delay={0.4} duration={0.5}>
+                  </SlideIn>                  <SlideIn from="top" delay={0.4} duration={0.5}>
                     <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
                       <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                         <CardTitle className="text-xs font-medium text-white">Video Length Breakdown</CardTitle>
@@ -935,33 +928,100 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
                     </Card>
                   </SlideIn>
                 </div>
-              </TabsContent>
-
-              <TabsContent value="keywords">
-                <SlideIn from="left" delay={0.4} duration={0.5}>
+              </TabsContent>              <TabsContent value="keywords">                <SlideIn from="top" delay={0.4} duration={0.5}>
                   <Card className="overflow-hidden bg-[#393E46] border-[#948979]/40 shadow-lg">
-                    <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
+                    <CardHeader className="py-2 px-3 flex flex-row justify-between items-center">
                       <CardTitle className="text-sm font-medium text-white">Common Keywords in Video Titles</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <div className="flex flex-wrap justify-center gap-3">
-                        {wordCloudData.slice(0, 50).map((word, index) => (
-                          <span 
-                            key={word.text} 
-                            className="inline-block px-2 py-1 rounded"                            style={{                              fontSize: `${Math.max(0.8, Math.min(3, 0.8 + (word.value / wordCloudData[0].value) * 2))}rem`,                              color: (() => {                                // Use pastel blue to green gradient (flipped from other charts)
-                                const ratio = Math.min(1, index / Math.min(30, wordCloudData.length)); // Flipped ratio
-                                // Apply inverted color palette with pastel blue for more common words
-                                const r = Math.round(76 * (1 - ratio) + 150 * ratio);      // Increase red for pastel
-                                const g = Math.round(175 * (1 - ratio) + 180 * ratio);     // Higher green for pastel
-                                const b = Math.round(80 * (1 - ratio) + 210 * ratio);      // Slightly lower blue
-                                return `rgb(${r}, ${g}, ${b})`;
-                              })(),
-                              opacity: 0.9 + (word.value / wordCloudData[0].value) * 0.1,
-                            }}
-                          >
-                            {word.text}
-                          </span>
-                        ))}
+                    </CardHeader>                    <CardContent className="p-0">
+                      <div className="h-[320px] relative overflow-hidden">
+                        {wordCloudData.length > 0 && (
+                          <div className="bubble-container h-full w-full flex items-center justify-center">
+                            {/* Top keywords as a horizontal list */}
+                            <div className="absolute top-4 left-0 w-full px-4 flex justify-center">
+                              <div className="flex flex-wrap gap-2 justify-center max-w-[90%]">
+                                {wordCloudData.slice(0, 5).map((word, index) => {
+                                  // Use consistent green to pastel blue color scheme
+                                  const ratio = index / 4; // 0-4 indexes (5 items)
+                                  const r = Math.round(76 * (1 - ratio) + 150 * ratio);
+                                  const g = Math.round(175 * (1 - ratio) + 180 * ratio);
+                                  const b = Math.round(80 * (1 - ratio) + 210 * ratio);
+                                  const color = `rgb(${r}, ${g}, ${b})`;
+                                  
+                                  const fontSize = 1 - (index * 0.1); // 1.0, 0.9, 0.8, 0.7, 0.6
+                                  
+                                  return (
+                                    <div 
+                                      key={`top-${word.text}`}
+                                      className="px-3 py-1 rounded-full border border-white/10"
+                                      style={{
+                                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                        color: color,
+                                        fontSize: `${fontSize}rem`,
+                                        fontWeight: index === 0 ? 'bold' : 'normal'
+                                      }}
+                                    >
+                                      {word.text}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                            
+                            {/* Main tag cloud - grid layout */}
+                            <div className="grid grid-cols-4 gap-2 p-6 mt-12 w-full max-w-[90%]">
+                              {wordCloudData.slice(5, 25).map((word, index) => {
+                                // Calculate size based on position in the array
+                                const sizeIndex = Math.floor(index / 5); // 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, etc.
+                                const fontSize = 0.75 - (sizeIndex * 0.1); // 0.75, 0.65, 0.55, 0.45
+                                
+                                // Color based on position
+                                const ratio = index / 20;
+                                const r = Math.round(76 * (1 - ratio) + 150 * ratio);
+                                const g = Math.round(175 * (1 - ratio) + 180 * ratio);
+                                const b = Math.round(80 * (1 - ratio) + 210 * ratio);
+                                const color = `rgb(${r}, ${g}, ${b})`;
+                                
+                                const opacity = 1 - (sizeIndex * 0.15); // 1, 0.85, 0.7, 0.55
+                                
+                                return (
+                                  <div 
+                                    key={`grid-${word.text}`}
+                                    className="flex items-center justify-center text-center rounded-md py-1 border border-white/5"
+                                    style={{
+                                      backgroundColor: `rgba(76, 175, 80, ${0.15 * opacity})`,
+                                      color: color,
+                                      fontSize: `${fontSize}rem`,
+                                      overflow: 'hidden',
+                                      wordBreak: 'break-word',
+                                      padding: '4px',
+                                      minHeight: '28px'
+                                    }}
+                                  >
+                                    {word.text}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            
+                            {/* Bottom horizontal list */}
+                            <div className="absolute bottom-4 left-0 w-full px-4">
+                              <div className="flex flex-wrap gap-1 justify-center text-xs text-opacity-70 max-w-[90%] mx-auto">
+                                {wordCloudData.slice(25, 35).map((word, index) => {
+                                  const ratio = index / 10;
+                                  const r = Math.round(76 * (1 - ratio) + 150 * ratio);
+                                  const g = Math.round(175 * (1 - ratio) + 180 * ratio);
+                                  const b = Math.round(80 * (1 - ratio) + 210 * ratio);
+                                  
+                                  return (
+                                    <span key={`bottom-${word.text}`} style={{ color: `rgb(${r}, ${g}, ${b})` }} className="mr-2">
+                                      {word.text}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
