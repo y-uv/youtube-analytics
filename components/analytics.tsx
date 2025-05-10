@@ -371,7 +371,7 @@ export function Analytics() {
                                 color = CHART_COLORS.light;
                               }
                               
-                              return [<span style={{ color: "#FFFFFF" }}>{value}</span>, displayName];
+                              return [<span key="value" style={{ color: "#FFFFFF" }}>{value}</span>, displayName];
                             }}
                             labelFormatter={(name) => <b>{name}</b>}
                             separator=": "
@@ -426,7 +426,7 @@ export function Analytics() {
                               } else {
                                 color = CHART_COLORS.light;
                               }
-                              return [<span style={{ color: "#FFFFFF" }}>{value}</span>, <span style={{ color }}>{name}</span>];
+                              return [<span key="value" style={{ color: "#FFFFFF" }}>{value}</span>, <span key="name" style={{ color }}>{name}</span>];
                             }}
                             labelFormatter={(name) => <b>{name}</b>}
                             separator=": "
@@ -492,7 +492,7 @@ export function Analytics() {
                           />
                           <Tooltip
                             contentStyle={tooltipContentStyle}
-                            formatter={(value) => [<span style={{ color: "#FFFFFF" }}>{value}</span>, <span style={{ color: CHART_COLORS.light }}>Total</span>]}
+                            formatter={(value) => [<span key="value" style={{ color: "#FFFFFF" }}>{value}</span>, <span key="name" style={{ color: CHART_COLORS.light }}>Total</span>]}
                             labelFormatter={(name) => <b>{name}</b>}
                             separator=": "
                             wrapperStyle={{ whiteSpace: 'nowrap' }}
