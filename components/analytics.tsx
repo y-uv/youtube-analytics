@@ -417,16 +417,25 @@ export function Analytics() {
                             contentStyle={tooltipContentStyle}
                             formatter={(value, name) => {
                               let color;
+                              let displayName = name;
+                              
                               if (name === "Likes") {
                                 color = CHART_COLORS.likes;
+                                displayName = "Likes";
                               } else if (name === "Playlists") {
                                 color = CHART_COLORS.playlists;
+                                displayName = "Playlists";
                               } else if (name === "Subscriptions") {
                                 color = CHART_COLORS.subscriptions;
+                                displayName = "Subscriptions";
                               } else {
                                 color = CHART_COLORS.light;
                               }
-                              return [<span key="value" style={{ color: "#FFFFFF" }}>{value}</span>, <span key="name" style={{ color }}>{name}</span>];
+                              
+                              return [
+                                <span key="value" style={{ color: "#FFFFFF" }}>{value}</span>,
+                                <span key="name" style={{ color }}>{displayName}</span>
+                              ];
                             }}
                             labelFormatter={(name) => <b>{name}</b>}
                             separator=": "
