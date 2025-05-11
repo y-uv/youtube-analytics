@@ -537,16 +537,37 @@ export function WatchHistoryAnalytics({ watchHistory = [] }: WatchHistoryAnalyti
           <div className="flex items-center gap-2">
             <Youtube className="h-4 w-4 text-yellow-400" />
             <h1 className="text-lg font-bold">Watch History Analytics</h1>
+          </div>          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => router.push('/')}
+              className="flex items-center gap-1 h-7 px-2"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              Back to Dashboard
+            </Button>
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={() => {
+                // Clear any local storage or cookies before navigating
+                if (typeof window !== 'undefined') {
+                  // Clear localStorage
+                  localStorage.clear();
+                  // Clear cookies by expiring them
+                  document.cookie.split(";").forEach(function(c) {
+                    document.cookie = c.trim().split("=")[0] + "=;expires=" + new Date(0).toUTCString() + ";path=/";
+                  });
+                }
+                router.push('/');
+              }}
+              className="flex items-center gap-1 h-7 px-2"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Clear Session
+            </Button>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => router.push('/')}
-            className="flex items-center gap-1 h-7 px-2"
-          >
-            <ArrowLeft className="h-3 w-3" />
-            Back to Dashboard
-          </Button>
         </div>
 
         {!fileUploaded && !isProcessing ? (

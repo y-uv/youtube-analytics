@@ -254,9 +254,30 @@ export function Analytics() {
                 </>
               )}
               {session && (
-                <Button variant="outline" size="sm" onClick={() => signOut()}>
-                  Sign Out
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => signOut({ callbackUrl: '/' })}>
+                    Sign Out
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    onClick={() => {
+                      // Clear any local storage or cookies before signing out
+                      if (typeof window !== 'undefined') {
+                        // Clear localStorage
+                        localStorage.clear();
+                        // Clear cookies by expiring them
+                        document.cookie.split(";").forEach(function(c) {
+                          document.cookie = c.trim().split("=")[0] + "=;expires=" + new Date(0).toUTCString() + ";path=/";
+                        });
+                      }
+                      // Then sign out and redirect
+                      signOut({ callbackUrl: '/' });
+                    }}
+                  >
+                    Switch Account
+                  </Button>
+                </div>
               )}
             </div>
           </div>
@@ -584,9 +605,14 @@ export function Analytics() {
                         {session ? (
                           <>
                             <p className="text-sm text-gray-600 dark:text-gray-400">You are connected with your Google account.</p>
-                            <Button size="sm" variant="outline" onClick={() => signOut()}>
-                              Sign Out
-                            </Button>
+                            <div className="flex flex-col gap-2 mt-2">
+                              <Button size="sm" variant="outline" onClick={() => signOut()}>
+                                Sign Out
+                              </Button>
+                              <Button size="sm" variant="secondary" onClick={() => signIn("google", { prompt: "select_account" })}>
+                                Switch Account
+                              </Button>
+                            </div>
                           </>
                         ) : (
                           <>

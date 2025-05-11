@@ -24,22 +24,25 @@ if (!process.env.GOOGLE_CLIENT_SECRET) {
 }
 
 export const authOptions = {
-  providers: [
-    GoogleProvider({
+  providers: [    GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       authorization: {
         params: {
           // Restore YouTube API scope for test users
           scope: "openid email profile https://www.googleapis.com/auth/youtube.readonly",
-          prompt: "consent",
+          // Always show the consent screen to ensure the user is aware which account they're using
+          prompt: "select_account consent",
           access_type: "offline",
           response_type: "code"
         }
       }
     }),
-  ],
-  callbacks: {
+  ],  callbacks: {    // Callback to handle sign-in events
+    async signIn({ user, account, profile }: { user: any, account: Account | null, profile?: any }) {
+      // Always force a fresh authentication
+      return true; // Return true to allow sign in
+    },
     async jwt({ token, account, user }: { token: ExtendedToken, account: Account | null, user: any }) {
       // Initial sign-in
       if (account && user) {
@@ -111,12 +114,25 @@ export const authOptions = {
       
       return session;
     }
-  },
-  // Using JWT strategy for storing session data
+  },  // Using JWT strategy for storing session data
   session: {
     strategy: "jwt",
-    // Increase max age to avoid frequent re-authentication
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    // Use a reasonable session duration (24 hours) for better UX while maintaining security
+    maxAge: 24 * 60 * 60, // 24 hours
+  },// Configure cookies with environment-appropriate settings
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === "production" 
+        ? `__Secure-next-auth.session-token` 
+        : `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? 'strict' : 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 24 * 60 * 60 // Extend to 24 hours for better user experience
+      }
+    }
   },
   debug: process.env.NODE_ENV === "development"
 }
