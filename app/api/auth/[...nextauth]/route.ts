@@ -24,7 +24,8 @@ if (!process.env.GOOGLE_CLIENT_SECRET) {
 }
 
 export const authOptions = {
-  providers: [    GoogleProvider({
+  providers: [    
+    GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       authorization: {
@@ -38,9 +39,23 @@ export const authOptions = {
         }
       }
     }),
-  ],  callbacks: {    // Callback to handle sign-in events
-    async signIn({ user, account, profile }: { user: any, account: Account | null, profile?: any }) {
-      // Always force a fresh authentication
+  ],  callbacks: {
+    // Callback to handle sign-in events
+    async signIn({ user, account, profile, email }: { user: any, account: Account | null, profile?: any, email?: any }) {
+      // Store the sign-in timestamp and additional security metadata in the token
+      if (user) {
+        // Add security-related metadata to help identify different users
+        (user as any).lastSignIn = new Date().toISOString();
+        (user as any).sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+        
+        // Store the email explicitly to add another layer of verification
+        if (email) {
+          (user as any).emailVerified = email;
+        }
+        
+        // Log sign in attempt with datetime for security auditing
+        console.log(`Sign-in attempt for user: ${user.email} at ${new Date().toISOString()}`);
+      }
       return true; // Return true to allow sign in
     },
     async jwt({ token, account, user }: { token: ExtendedToken, account: Account | null, user: any }) {
@@ -102,8 +117,7 @@ export const authOptions = {
         console.error("Error refreshing access token:", error);
         return { ...token, error: "RefreshAccessTokenError" };
       }
-    },
-    async session({ session, token }: { session: ExtendedSession, token: ExtendedToken }) {
+    },    async session({ session, token, trigger }: { session: ExtendedSession, token: ExtendedToken, trigger?: any }) {
       // Send properties to the client, like an access_token from a provider.
       session.accessToken = token.accessToken;
       
@@ -112,14 +126,29 @@ export const authOptions = {
         (session as any).error = token.error;
       }
       
+      // Add session security metadata
+      (session as any).sessionId = (token as any).sessionId || `session_${Date.now()}`;
+      (session as any).lastVerified = new Date().toISOString();
+      
+      // Ensure email verification consistency
+      if (session.user?.email !== (token as any).email) {
+        console.warn("Email mismatch detected in session. Expected:", (token as any).email, "Got:", session.user?.email);
+        // Don't return session data if emails don't match
+        if (process.env.NODE_ENV === "production") {
+          return null; // Force re-authentication in production
+        }
+      }
+      
       return session;
-    }
-  },  // Using JWT strategy for storing session data
+    }},    // Using JWT strategy for storing session data  
   session: {
     strategy: "jwt",
-    // Use a reasonable session duration (24 hours) for better UX while maintaining security
-    maxAge: 24 * 60 * 60, // 24 hours
-  },// Configure cookies with environment-appropriate settings
+    // Shorter session duration (2 hours) to reduce risk of session hijacking
+    maxAge: 2 * 60 * 60, // 2 hours
+  },
+  // Use a strong secret for session encryption
+  secret: process.env.NEXTAUTH_SECRET,
+  // Configure cookies with environment-appropriate settings
   cookies: {
     sessionToken: {
       name: process.env.NODE_ENV === "production" 
@@ -130,7 +159,31 @@ export const authOptions = {
         sameSite: process.env.NODE_ENV === "production" ? 'strict' : 'lax',
         path: '/',
         secure: process.env.NODE_ENV === "production",
-        maxAge: 24 * 60 * 60 // Extend to 24 hours for better user experience
+        maxAge: 2 * 60 * 60, // 2 hours instead of 24 hours
+        domain: process.env.COOKIE_DOMAIN || undefined, // Use custom domain if specified
+      }
+    },
+    // Additional cookies configuration for strict session control in production
+    callbackUrl: {
+      name: process.env.NODE_ENV === "production"
+        ? `__Secure-next-auth.callback-url`
+        : `next-auth.callback-url`,
+      options: {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? 'strict' : 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === "production",
+      }
+    },
+    csrfToken: {
+      name: process.env.NODE_ENV === "production"
+        ? `__Secure-next-auth.csrf-token`
+        : `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? 'strict' : 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === "production",
       }
     }
   },

@@ -17,8 +17,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import { FileJson, LogIn, Settings, Youtube, RefreshCw, BarChart3, Moon as MoonIcon, Sun as SunIcon } from "lucide-react"
+import { FileJson, LogIn, Settings, Youtube, RefreshCw, BarChart3, Moon as MoonIcon, Sun as SunIcon, AlertTriangle } from "lucide-react"
 import { useTheme } from "next-themes"
+import { clearAuthStorage, enhancedSignOut } from "@/lib/session-security"
 
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
@@ -255,24 +256,20 @@ export function Analytics() {
               )}
               {session && (
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => signOut({ callbackUrl: '/' })}>
+                  <Button variant="outline" size="sm" onClick={async () => await enhancedSignOut()}>
                     Sign Out
                   </Button>
                   <Button 
                     variant="secondary" 
                     size="sm" 
-                    onClick={() => {
-                      // Clear any local storage or cookies before signing out
-                      if (typeof window !== 'undefined') {
-                        // Clear localStorage
-                        localStorage.clear();
-                        // Clear cookies by expiring them
-                        document.cookie.split(";").forEach(function(c) {
-                          document.cookie = c.trim().split("=")[0] + "=;expires=" + new Date(0).toUTCString() + ";path=/";
-                        });
-                      }
-                      // Then sign out and redirect
-                      signOut({ callbackUrl: '/' });
+                    onClick={async () => {
+                      // First clear all auth data completely
+                      await clearAuthStorage();
+                      // Then force account selection with fresh auth
+                      signIn("google", { 
+                        prompt: "select_account consent",
+                        callbackUrl: window.location.href
+                      });
                     }}
                   >
                     Switch Account
@@ -606,11 +603,47 @@ export function Analytics() {
                           <>
                             <p className="text-sm text-gray-600 dark:text-gray-400">You are connected with your Google account.</p>
                             <div className="flex flex-col gap-2 mt-2">
-                              <Button size="sm" variant="outline" onClick={() => signOut()}>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={async () => {
+                                  // Use the enhanced sign out utility for complete cleanup
+                                  await enhancedSignOut();
+                                }}
+                              >
                                 Sign Out
                               </Button>
-                              <Button size="sm" variant="secondary" onClick={() => signIn("google", { prompt: "select_account" })}>
+                              <Button 
+                                size="sm" 
+                                variant="secondary" 
+                                onClick={async () => {
+                                  // First clear all auth data completely
+                                  await clearAuthStorage();
+                                  // Then force account selection with fresh auth
+                                  signIn("google", { 
+                                    prompt: "select_account consent",
+                                    callbackUrl: window.location.href
+                                  });
+                                }}
+                              >
                                 Switch Account
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={async () => {
+                                  // Force a hard reset of all auth data
+                                  await clearAuthStorage();
+                                  // Clear all cookies
+                                  document.cookie.split(";").forEach(c => {
+                                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                                  });
+                                  // Force a complete page reload from server
+                                  window.location.href = '/?forceRefresh=' + Date.now();
+                                }}
+                              >
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                Reset Auth
                               </Button>
                             </div>
                           </>
